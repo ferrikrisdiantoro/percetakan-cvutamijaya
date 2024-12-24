@@ -35,6 +35,12 @@ class Order extends Model
         return $this->belongsTo(User::class, 'id_pelanggan');
     }
 
+    public function transactionDetails()
+    {
+        return $this->hasMany(DetailTransaction::class, 'id_pesanan', 'id_pesanan');
+    }
+
+
     // Generate id_pesanan
     protected static function boot()
     {

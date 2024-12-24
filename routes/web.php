@@ -42,6 +42,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/order/store', [OrderController::class, 'store'])->name('order.store');
     Route::post('/transaction/cart', [TransactionController::class, 'cart'])->name('transaction.cart');
     Route::post('/add-to-cart', [OrderController::class, 'addToCart']);
+    Route::delete('/order/destroy/{id_pesanan}', [OrderController::class, 'destroy'])->name('order.destroy');
+    Route::delete('/order/multipledestroy', [OrderController::class, 'multipledestroy'])->name('order.multipledestroy');
     Route::get('/data-pesanan', [TransactionController::class, 'index'])->name('data-pesanan');
 });
 

@@ -56,10 +56,22 @@
                 @foreach ($transactions as $transaction)
                     <tr class="bg-gray-800 text-white">
                         <td class="border border-gray-600 p-2">{{ $transaction->id_transaksi }}</td>
-                        <td class="border border-gray-600 p-2">{{ $transaction->id_produk }}</td>
+                        <td class="border border-gray-600 p-2 text-center">
+                            @foreach($transaction->detailTransactions as $detail)
+                                <p>{{ $detail->order->id_produk }} </p>
+                            @endforeach
+                        </td>
                         <td class="border border-gray-600 p-2">{{ $transaction->id_pelanggan }}</td>
-                        <td class="border border-gray-600 p-2">{{ $transaction->id_pesanan }}</td>
-                        <td class="border border-gray-600 p-2">{{ $transaction->order->kuantitas }}</td>
+                        <td class="border border-gray-600 p-2">
+                            @foreach($transaction->detailTransactions as $detail)
+                                <p>{{ $detail->order->id_pesanan }} </p>
+                            @endforeach
+                        </td>
+                        <td class="border border-gray-600 p-2 text-center">
+                            @foreach($transaction->detailTransactions as $detail)
+                                <p>{{ $detail->order->kuantitas }} </p>
+                            @endforeach
+                        </td>
                         <td class="border border-gray-600 p-2">{{ \Carbon\Carbon::parse($transaction->tanggal_transaksi)->format('d/m/Y') }}</td>
                         <td class="border border-gray-600 p-2">{{ $transaction->total_pembayaran }}</td>
                         <td class="border border-gray-600 p-2">{{ $transaction->mode_pembayaran }}</td>

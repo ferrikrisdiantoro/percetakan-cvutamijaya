@@ -11,9 +11,9 @@ class DataPesananController extends Controller
     // Menampilkan semua data pesanan
     public function index()
     {
-        // Mengambil semua transaksi berdasarkan pelanggan yang login
-        $orders = Transaction::where('id_pelanggan', Auth::id())->get();
-        dd($orders);
+        $orders = Transaction::with('detailTransactions.order.product')
+        ->where('id_pelanggan', Auth::id())
+        ->get();
 
         return view('pelanggan.data-pesanan', compact('orders'));
     }

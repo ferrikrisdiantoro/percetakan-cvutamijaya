@@ -207,9 +207,9 @@
                                     </div>
                                 </div>
                                 <div class="flex justify-center mt-4 space-x-4">
-                                <button type="button" class="bg-cyan-400 text-white px-4 py-2 rounded" onclick="submitTransaction('{{ $product->id_produk }}')">Bayar</button>
+                                    <button type="button" class="bg-cyan-400 text-white px-4 py-2 rounded" onclick="submitTransaction('{{ $product->id_produk }}')">Bayar</button>
                                     <!-- Tombol Cancel -->
-                                    <button type="button" class="bg-red-400 text-white px-4 py-2 rounded" onclick="closeModal('{{ $product->id_produk }}')">Cancel</button>
+                                    <button type="button" class="bg-red-400 text-white px-4 py-2 rounded" onclick="closeModal('{{ $product->id_produk }}', true)">Cancel</button>
                                 </div>
                                 @if(session('message'))
                                     <script>
@@ -293,6 +293,72 @@
                 };
             }
 
+            function closeModal(productId, isCancel) {
+                console.log('closeModal triggered for productId:', productId);
+
+                const firstModal = document.getElementById('orderModal' + productId);
+                const secondModal = document.getElementById('secondModal' + productId);
+
+                if (!firstModal && !secondModal) {
+                    console.error('Modals not found for productId:', productId);
+                    return;
+                }
+
+                // Ambil ID pesanan dari elemen hidden di modal kedua
+                const orderIdElement = document.getElementById('orderId' + productId);
+                const orderId = orderIdElement ? orderIdElement.value : null;
+
+                if (isCancel && orderId) {
+                    console.log('Deleting order with ID:', orderId);
+                    deleteOrder(orderId)
+                        .then(() => {
+                            console.log('Order deleted successfully:', orderId);
+                        })
+                        .catch(error => {
+                            console.error('Failed to delete order:', error);
+                        });
+                } else {
+                    console.log('Not deleting order:', orderId);
+                }
+
+                // Close modals
+                firstModal.style.display = 'none';
+                secondModal.style.display = 'none';
+            }
+            
+            // Tombol Cancel
+            document.getElementById('cancelButton' + productId).addEventListener('click', function() {
+                closeModal(productId, true);  // isCancel = true
+            });
+
+            // Tombol Bayar
+            document.getElementById('payButton' + productId).addEventListener('click', function() {
+                closeModal(productId, false);  // isCancel = false
+            });
+
+
+
+
+            async function deleteOrder(orderId) {
+                try {
+                    const response = await fetch(`/order/destroy/${orderId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        }
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Gagal menghapus pesanan');
+                    }
+
+                    return response.json();
+                } catch (error) {
+                    console.error('Terjadi kesalahan saat menghapus pesanan:', error);
+                    throw error;
+                }
+            }
+
 
             function createTransaction(productId) {
                 const quantity = parseInt(document.getElementById('quantity' + productId).innerText);
@@ -354,85 +420,76 @@
             }
 
             function addToCart(product) {
-    const { id_produk, nama_produk, harga, gambar } = product;
-    console.log("Data Produk:", product);
+                const { id_produk, nama_produk, harga, gambar } = product;
+                console.log("Data Produk:", product);
 
-    const quantity = parseInt(document.getElementById('quantity' + id_produk).textContent);
+                const quantity = parseInt(document.getElementById('quantity' + id_produk).textContent);
 
-    if (!id_produk || !nama_produk || !harga || !gambar || !quantity) {
-        console.error("Produk tidak lengkap atau kuantitas tidak valid, tidak bisa ditambahkan ke keranjang");
-        return;
-    }
+                if (!id_produk || !nama_produk || !harga || !gambar || !quantity) {
+                    console.error("Produk tidak lengkap atau kuantitas tidak valid, tidak bisa ditambahkan ke keranjang");
+                    return;
+                }
 
-    const cart = JSON.parse(localStorage.getItem('cart')) || [];
+                const cart = JSON.parse(localStorage.getItem('cart')) || [];
 
-    const existingProductIndex = cart.findIndex(item => item.id_produk === id_produk);
+                const existingProductIndex = cart.findIndex(item => item.id_produk === id_produk);
 
-    // Memastikan produk memiliki order_id yang valid sebelum melanjutkan
-    if (existingProductIndex !== -1 && !cart[existingProductIndex].id_pesanan) {
-        console.error(`Order ID untuk produk ${id_produk} tidak valid!`);
-        return;  // Menghentikan proses jika id_pesanan tidak ada
-    }
+                // Memastikan produk memiliki order_id yang valid sebelum melanjutkan
+                if (existingProductIndex !== -1 && !cart[existingProductIndex].id_pesanan) {
+                    console.error(`Order ID untuk produk ${id_produk} tidak valid!`);
+                    return;  // Menghentikan proses jika id_pesanan tidak ada
+                }
 
-    if (existingProductIndex !== -1) {
-        cart[existingProductIndex].kuantitas += quantity;
-    } else {
-        cart.push({
-            id_produk,
-            nama_produk,
-            harga,
-            gambar,
-            kuantitas: quantity,
-            id_pesanan: null, // Pastikan id_pesanan di set sebagai null saat produk baru ditambahkan
-        });
-    }
+                if (existingProductIndex !== -1) {
+                    cart[existingProductIndex].kuantitas += quantity;
+                } else {
+                    cart.push({
+                        id_produk,
+                        nama_produk,
+                        harga,
+                        gambar,
+                        kuantitas: quantity,
+                        id_pesanan: null, // Pastikan id_pesanan di set sebagai null saat produk baru ditambahkan
+                    });
+                }
 
-    // Setelah menambah atau memperbarui produk, simpan keranjang yang diperbarui di localStorage
-    localStorage.setItem('cart', JSON.stringify(cart));
+                // Setelah menambah atau memperbarui produk, simpan keranjang yang diperbarui di localStorage
+                localStorage.setItem('cart', JSON.stringify(cart));
 
-    // Kirim data ke server untuk mendapatkan order_id
-    fetch('/order/store', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        },
-        body: JSON.stringify({
-            product_id: id_produk,
-            kuantitas: quantity,
-            total_pembayaran: harga * quantity
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.order_id) {
-            // Cari produk yang sesuai dengan id_produk dan update dengan order_id
-            const productToUpdate = cart[existingProductIndex !== -1 ? existingProductIndex : cart.length - 1];
-            productToUpdate.id_pesanan = data.order_id;
+                // Kirim data ke server untuk mendapatkan order_id
+                fetch('/order/store', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({
+                        product_id: id_produk,
+                        kuantitas: quantity,
+                        total_pembayaran: harga * quantity
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.order_id) {
+                        // Cari produk yang sesuai dengan id_produk dan update dengan order_id
+                        const productToUpdate = cart[existingProductIndex !== -1 ? existingProductIndex : cart.length - 1];
+                        productToUpdate.id_pesanan = data.order_id;
 
-            // Simpan keranjang yang sudah diperbarui ke localStorage
-            localStorage.setItem('cart', JSON.stringify(cart)); // Pastikan keranjang diperbarui
-            console.log("Keranjang diperbarui dengan ID pesanan", cart);
-        }
-    })
-    .catch(error => console.error("Error saat menambah ID pesanan ke keranjang:", error));
-}
-
-
-
-
-
-
-
-
+                        // Simpan keranjang yang sudah diperbarui ke localStorage
+                        localStorage.setItem('cart', JSON.stringify(cart)); // Pastikan keranjang diperbarui
+                        console.log("Keranjang diperbarui dengan ID pesanan", cart);
+                    }
+                })
+                .catch(error => console.error("Error saat menambah ID pesanan ke keranjang:", error));
+            }
 
             function submitTransaction(productId) {
                 const form = document.getElementById('transactionForm' + productId);
                 const formData = new FormData(form);
 
-                 // Ambil nilai order_id yang sudah diisi di modal kedua
+                // Ambil nilai order_id yang sudah diisi di modal kedua
                 const orderId = document.getElementById('orderId' + productId).value;
-
                 formData.append('order_id', orderId);
 
                 fetch('/transaction/store', {
@@ -461,10 +518,7 @@
                 });
             }
 
-            function closeModal(productId) {
-                const modal = document.getElementById('orderModal' + productId);
-                modal.classList.add('hidden');
-            }
+
 
         </script>
 

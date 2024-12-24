@@ -106,7 +106,7 @@
                     </div>
 
                     <div class="flex justify-between">
-                        <button id="clearCartButton" class="bg-red-500 text-white px-4 py-2">Hapus Semua</button>
+                        <button id="clearCartButton" class="bg-red-500 text-white px-4 py-2">Hapus</button>
                         <button id="checkoutButton" class="bg-cyan-400 text-black px-4 py-2">Bayar</button>
                     </div>
                 </div>
@@ -118,7 +118,6 @@
                     <!-- Header Modal -->
                     <div class="flex justify-between items-center mb-4">
                         <h1 class="text-xl font-bold">Detail Pembayaran</h1>
-                        <button onclick="closePaymentModal()" class="text-lg font-bold text-red-500">X</button>
                     </div>
 
                     <!-- Daftar Card Produk -->
@@ -160,20 +159,95 @@
                     <!-- Tombol Aksi -->
                     <div class="flex justify-center mt-4 space-x-4">
                         <button type="button" class="bg-cyan-400 text-white px-4 py-2 rounded" id="payButton">Bayar</button>
-                        <button type="button" class="bg-red-400 text-white px-4 py-2 rounded" onclick="closePaymentModal()">Cancel</button>
+                        <button type="button" class="bg-red-400 text-white px-4 py-2 rounded" id="cancelButton">Cancel</button>
                     </div>
                 </div>
             </div>
 
             <script>
+                function updateCartItems() {
+                        const cart = JSON.parse(localStorage.getItem('cart')) || [];
+                        const cartItemsContainer = document.getElementById('cartItems');
+                        const totalAmountElement = document.getElementById("totalAmount");
+
+                        cartItemsContainer.innerHTML = '';
+
+                        if (cart.length === 0) {
+                            cartItemsContainer.innerHTML = '<p>Keranjang kosong</p>';
+                            totalAmountElement.innerText = "0";
+                            return;
+                        }
+
+                        let totalAmount = 0;
+                        cart.forEach((item, index) => {
+                            console.log("id_pesanan:",item.id_pesanan); 
+                            if (item.harga && item.kuantitas && item.id_produk) {
+                                totalAmount += item.harga * item.kuantitas;
+
+                                const cartItem = `
+                                    <div class="flex items-center mb-4" id="cart-item-${index}">
+                                        <input class="w-6 h-6 mr-4 checkbox-item" type="checkbox" data-order-id="${item.id_pesanan}" />
+                                        <img alt="${item.nama_produk}" class="w-24 h-24 mr-4" src="${item.gambar}" />
+                                        <div>
+                                            <p class="text-lg font-bold">${item.nama_produk}</p>
+                                            <p class="text-lg">Rp${item.harga.toLocaleString()}</p>
+                                        </div>
+                                        <div class="flex items-center ml-auto">
+                                            <button class="w-8 h-8 border border-black" onclick="decreaseQuantity('${item.id_produk}')">-</button>
+                                            <span class="w-8 h-8 flex items-center justify-center border-t border-b border-black">${item.kuantitas}</span>
+                                            <button class="w-8 h-8 border border-black" onclick="increaseQuantity('${item.id_produk}')">+</button>
+                                        </div>
+                                    </div>
+                                `;
+                                cartItemsContainer.innerHTML += cartItem;
+                            }
+                        });
+                        totalAmountElement.innerText = totalAmount.toLocaleString();
+                    }
+                    
+                // Function to decrease product quantity
+                function decreaseQuantity(productId) {
+                            const cart = JSON.parse(localStorage.getItem('cart')) || [];
+                            const productIndex = cart.findIndex(item => item.id_produk === productId);
+
+                            if (productIndex !== -1 && cart[productIndex].kuantitas > 1) {
+                                cart[productIndex].kuantitas--;
+                                localStorage.setItem('cart', JSON.stringify(cart));
+                                updateCartItems();
+                            }
+                        }
+
+                    // Function to increase product quantity
+                    function increaseQuantity(productId) {
+                        const cart = JSON.parse(localStorage.getItem('cart')) || [];
+                        const productIndex = cart.findIndex(item => item.id_produk === productId);
+
+                        if (productIndex !== -1) {
+                            cart[productIndex].kuantitas++;
+                            localStorage.setItem('cart', JSON.stringify(cart));
+                            updateCartItems();
+                        }
+                    }
+
                 document.addEventListener("DOMContentLoaded", function() {
+
+                    // Function to submit transactions
                     function submitAllTransactions() {
                         const checkboxes = document.querySelectorAll(".checkbox-item:checked");
                         const cart = JSON.parse(localStorage.getItem("cart")) || [];
+                        console.log("Isi cart:", cart);
+                        
+                        // Mengambil item yang dipilih berdasarkan id_pesanan
                         const selectedItems = Array.from(checkboxes).map((checkbox) => {
-                            const itemId = checkbox.dataset.id;
-                            return cart.find((item) => item.id_produk === itemId);
-                        });
+                            const orderId = checkbox.dataset.orderId;
+                            const item = cart.find((item) => item.id_pesanan === orderId);  // Temukan item berdasarkan id_pesanan
+                            
+                            // Jika item tidak ditemukan, log kesalahan
+                            if (!item) {
+                                console.error(`Item dengan id_pesanan ${orderId} tidak ditemukan di cart.`);
+                            }
+                            return item;  // Bisa undefined jika tidak ditemukan
+                        }).filter(item => item !== undefined);  // Menyaring item undefined
 
                         if (selectedItems.length === 0) {
                             alert("Pilih item yang ingin dibayar!");
@@ -184,7 +258,6 @@
                         const bankName = document.querySelector("select[name='bank_name']").value;
                         const proofOfPayment = document.querySelector("input[name='proof_of_payment']").files[0];
                         const customImage = document.querySelector("input[name='custom_image']").files[0];
-
 
                         if (!paymentMethod || !bankName || !proofOfPayment) {
                             alert("Lengkapi semua informasi pembayaran!");
@@ -202,10 +275,9 @@
                                 console.error(`Order ID untuk produk ${item.id_produk} tidak valid!`);
                                 return;  // Jika id_pesanan kosong, hentikan pengiriman
                             }
-                            formData.append(`cart[${index}][product_id]`, item.id_produk);
-                            formData.append(`cart[${index}][order_id]`, item.id_pesanan);
-                            console.log(item.id_pesanan);
 
+                            formData.append(`cart[${index}][product_id]`, item.id_produk);  // Menggunakan id_produk
+                            formData.append(`cart[${index}][order_id]`, item.id_pesanan);  // Menggunakan id_pesanan
                             formData.append(`cart[${index}][kuantitas]`, item.kuantitas);
                             formData.append(`cart[${index}][total_harga]`, item.harga * item.kuantitas);
                             formData.append(`cart[${index}][total_pembayaran]`, item.harga * item.kuantitas);
@@ -233,88 +305,61 @@
                         .catch((error) => console.error("Error:", error));
                     }
 
-
                     const payButton = document.getElementById("payButton");
                     if (payButton) {
                         payButton.addEventListener("click", submitAllTransactions);
                     }
 
-                    // Function to decrease product quantity
-                    function decreaseQuantity(productId) {
-                        const cart = JSON.parse(localStorage.getItem('cart')) || [];
-                        const productIndex = cart.findIndex(item => item.id_produk === productId);
 
-                        if (productIndex !== -1 && cart[productIndex].kuantitas > 1) {
-                            cart[productIndex].kuantitas--;
-                            localStorage.setItem('cart', JSON.stringify(cart));
-                            updateCartItems();
-                        }
-                    }
+                    
 
-                    // Function to increase product quantity
-                    function increaseQuantity(productId) {
-                        const cart = JSON.parse(localStorage.getItem('cart')) || [];
-                        const productIndex = cart.findIndex(item => item.id_produk === productId);
+                    document.getElementById("clearCartButton").addEventListener("click", function() {
+                        const selectedOrderIds = []; // Menyimpan id pesanan yang dipilih untuk dihapus
 
-                        if (productIndex !== -1) {
-                            cart[productIndex].kuantitas++;
-                            localStorage.setItem('cart', JSON.stringify(cart));
-                            updateCartItems();
-                        }
-                    }
+                        const checkboxes = document.querySelectorAll(".checkbox-item:checked");
+                        checkboxes.forEach((checkbox) => {
+                            const orderId = checkbox.dataset.orderId; // Ambil ID pesanan dari checkbox
+                            selectedOrderIds.push(orderId); // Menambahkan id pesanan yang dipilih
+                        });
 
-                    function updateCartItems() {
-                        const cart = JSON.parse(localStorage.getItem('cart')) || [];
-                        const cartItemsContainer = document.getElementById('cartItems');
-                        const totalAmountElement = document.getElementById("totalAmount");
-
-                        cartItemsContainer.innerHTML = '';
-
-                        if (cart.length === 0) {
-                            cartItemsContainer.innerHTML = '<p>Keranjang kosong</p>';
-                            totalAmountElement.innerText = "0";
+                        if (selectedOrderIds.length === 0) {
+                            alert("Pilih item yang ingin dihapus!");
                             return;
                         }
 
-                        let totalAmount = 0;
-                        cart.forEach((item, index) => {
-                            console.log("id_pesanan:",item.id_pesanan); 
-                            if (item.harga && item.kuantitas && item.id_produk) {
-                                totalAmount += item.harga * item.kuantitas;
+                        // Ambil cart dari localStorage
+                        let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
-                                const cartItem = `
-                                    <div class="flex items-center mb-4" id="cart-item-${index}">
-                                        <input class="w-6 h-6 mr-4 checkbox-item" type="checkbox" data-id="${item.id_produk}" />
-                                        <img alt="${item.nama_produk}" class="w-24 h-24 mr-4" src="${item.gambar}" />
-                                        <div>
-                                            <p class="text-lg font-bold">${item.nama_produk}</p>
-                                            <p class="text-lg">Rp${item.harga.toLocaleString()}</p>
-                                        </div>
-                                        <div class="flex items-center ml-auto">
-                                            <button class="w-8 h-8 border border-black" onclick="decreaseQuantity('${item.id_produk}')">-</button>
-                                            <span class="w-8 h-8 flex items-center justify-center border-t border-b border-black">${item.kuantitas}</span>
-                                            <button class="w-8 h-8 border border-black" onclick="increaseQuantity('${item.id_produk}')">+</button>
-                                            <button class="text-red-500 ml-4" onclick="removeItem(${index})">Hapus</button>
-                                        </div>
-                                    </div>
-                                `;
-                                cartItemsContainer.innerHTML += cartItem;
+                        // Filter cart untuk menghapus item dengan id_pesanan yang dipilih
+                        cart = cart.filter(item => !selectedOrderIds.includes(item.id_pesanan));
+
+                        // Simpan kembali cart yang sudah diupdate
+                        localStorage.setItem("cart", JSON.stringify(cart));
+
+                        // Perbarui tampilan keranjang
+                        updateCartItems();
+
+                        // Kirim request ke server untuk menghapus pesanan
+                        fetch('/order/multipledestroy', {
+                            method: 'DELETE',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                            },
+                            body: JSON.stringify({ order_ids: selectedOrderIds })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.message) {
+                                alert(data.message);
+                            } else {
+                                alert('Gagal menghapus pesanan.');
                             }
+                        })
+                        .catch((error) => {
+                            console.error('Terjadi kesalahan:', error);
+                            alert('Terjadi kesalahan saat menghapus pesanan.');
                         });
-                        totalAmountElement.innerText = totalAmount.toLocaleString();
-                    }
-
-                    // Function to remove item from cart
-                    function removeItem(index) {
-                        const cart = JSON.parse(localStorage.getItem('cart')) || [];
-                        cart.splice(index, 1);
-                        localStorage.setItem('cart', JSON.stringify(cart));
-                        updateCartItems();
-                    }
-
-                    document.getElementById("clearCartButton").addEventListener("click", function() {
-                        localStorage.removeItem('cart');
-                        updateCartItems();
                     });
 
                     document.getElementById('cartIcon').addEventListener('click', () => {
@@ -331,19 +376,29 @@
                     document.getElementById('checkoutButton').addEventListener('click', () => {
                         const checkboxes = document.querySelectorAll(".checkbox-item:checked");
                         const cart = JSON.parse(localStorage.getItem('cart')) || [];
+                        console.log("Isi cart setelah menambahkan produk:", cart);
+
                         const selectedItems = Array.from(checkboxes).map(checkbox => {
-                            const itemId = checkbox.dataset.id;
-                            return cart.find(item => item.id_produk === itemId);
-                        });
+                            const orderId = checkbox.dataset.orderId;
+                            console.log("Mencari item dengan id_pesanan:", orderId); // Verifikasi ID yang dipilih
+                            const item = cart.find(item => item.id_pesanan === orderId);
+                            
+                            if (!item) {
+                                console.error(`Item dengan id_pesanan ${orderId} tidak ditemukan di cart.`);
+                            }
+                            return item;  // Bisa undefined jika tidak ditemukan
+                        }).filter(item => item !== undefined);  // Menyaring item undefined
 
                         if (selectedItems.length === 0) {
                             alert("Pilih item yang ingin dibayar!");
                             return;
                         }
 
-                        openPaymentModal(selectedItems);
+                        console.log("Selected items untuk pembayaran:", selectedItems);
+                        openPaymentModal(selectedItems);  // Fungsi yang membuka modal pembayaran
                     });
 
+                    // Fungsi untuk membuka modal pembayaran
                     function openPaymentModal(selectedItems) {
                         const modalProductCards = document.getElementById("modalProductCards");
                         const paymentModal = document.getElementById("paymentModal");
@@ -353,44 +408,74 @@
                         let totalHarga = 0;
 
                         selectedItems.forEach((item) => {
-                            const hargaProduk = item.harga * item.kuantitas;
-                            totalHarga += hargaProduk;
+                            if (item && item.harga && item.kuantitas) {
+                                const hargaProduk = item.harga * item.kuantitas;
+                                totalHarga += hargaProduk;
 
-                            const cardHTML = `
-                                <div class="bg-white p-4 border border-gray-300 rounded-lg">
-                                    <h2 class="text-lg font-bold">Pesanan: ${item.nama_produk}</h2>
-                                    <div class="grid grid-cols-2 gap-4 mt-4">
-                                        <input type="hidden" name="order_id" value="${item.id_pesanan}">
-                                        <input type="hidden" name="product_id" value="${item.id_produk}">
-                                        <div>
-                                            <label class="block mb-2">Nama Lengkap</label>
-                                            <input type="text" name="nama_lengkap" value="{{ Auth::user()->nama_lengkap }}" class="w-full p-2 border border-gray-300 rounded" disabled>
-                                        </div>
-                                        <div>
-                                            <label class="block mb-2">Alamat</label>
-                                            <input type="text" name="alamat" value="{{ Auth::user()->alamat }}" class="w-full p-2 border border-gray-300 rounded" disabled>
-                                        </div>
-                                        <div>
-                                            <label class="block mb-2">Nomor Telepon/WA</label>
-                                            <input type="text" name="telepon" value="{{ Auth::user()->telepon }}" class="w-full p-2 border border-gray-300 rounded" disabled>
-                                        </div>
-                                        <div>
-                                            <label class="block mb-2">Upload Custom Gambar</label>
-                                            <input type="file" name="custom_image" accept="image/*" class="w-full p-2 border border-gray-300 rounded">
-                                        </div>
-                                        <div>
-                                            <label class="block mb-2">Jumlah Produk</label>
-                                            <input type="number" name="quantity" value="${item.kuantitas}" class="w-full p-2 border border-gray-300 rounded" disabled>
+                                const cardHTML = `
+                                    <div class="bg-white p-4 border border-gray-300 rounded-lg">
+                                        <h2 class="text-lg font-bold">Pesanan: ${item.nama_produk}</h2>
+                                        <div class="grid grid-cols-2 gap-4 mt-4">
+                                            <input type="hidden" name="order_id" value="${item.id_pesanan}">
+                                            <input type="hidden" name="product_id" value="${item.id_produk}">
+                                            <div>
+                                                <label class="block mb-2">Nama Lengkap</label>
+                                                <input type="text" name="nama_lengkap" value="{{ Auth::user()->nama_lengkap }}" class="w-full p-2 border border-gray-300 rounded" disabled>
+                                            </div>
+                                            <div>
+                                                <label class="block mb-2">Alamat</label>
+                                                <input type="text" name="alamat" value="{{ Auth::user()->alamat }}" class="w-full p-2 border border-gray-300 rounded" disabled>
+                                            </div>
+                                            <div>
+                                                <label class="block mb-2">Nomor Telepon/WA</label>
+                                                <input type="text" name="telepon" value="{{ Auth::user()->telepon }}" class="w-full p-2 border border-gray-300 rounded" disabled>
+                                            </div>
+                                            <div>
+                                                <label class="block mb-2">Upload Custom Gambar</label>
+                                                <input type="file" name="custom_image" accept="image/*" class="w-full p-2 border border-gray-300 rounded">
+                                            </div>
+                                            <div>
+                                                <label class="block mb-2">Jumlah Produk</label>
+                                                <input type="number" name="quantity" value="${item.kuantitas}" class="w-full p-2 border border-gray-300 rounded" disabled>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            `;
-                            modalProductCards.innerHTML += cardHTML;
+                                `;
+                                modalProductCards.innerHTML += cardHTML;
+                            } else {
+                                console.error(`Item dengan id_produk ${item.id_produk} tidak memiliki harga atau kuantitas yang valid.`);
+                            }
                         });
 
                         totalHargaElement.innerText = totalHarga;
+
+                        // Menampilkan modal pembayaran
                         paymentModal.classList.remove("hidden");
+
+                        // Menangani pembayaran sukses
+                        const payButton = document.getElementById('payButton');
+                        payButton.addEventListener('click', () => {
+                            // Hapus produk yang sudah dibayar dari keranjang
+                            const cart = JSON.parse(localStorage.getItem('cart')) || [];
+                            const selectedOrderIds = selectedItems.map(item => item.id_pesanan);  // Ambil id_pesanan dari selectedItems
+
+                            // Filter cart untuk menghapus item dengan id_pesanan yang dipilih
+                            const remainingItems = cart.filter(item => !selectedOrderIds.includes(item.id_pesanan));
+                            localStorage.setItem('cart', JSON.stringify(remainingItems));
+
+                            alert("Pembayaran berhasil dan produk telah dihapus dari keranjang.");
+
+                            // Tutup modal setelah pembayaran
+                            paymentModal.classList.add("hidden");
+
+                            // Perbarui tampilan keranjang
+                            updateCartItems();
+
+                            // Perbarui tampilan keranjang atau halaman lainnya
+                            location.reload();  // Jika ingin me-refresh halaman setelah transaksi
+                        });
                     }
+
                 });
             </script>
 
