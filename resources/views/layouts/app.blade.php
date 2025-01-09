@@ -6,6 +6,7 @@
     <title>DR AKTA PERCETAKAN</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="user-id" content="{{ Auth::user()->id_user ?? '' }}">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet"/>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
     <style>
@@ -15,27 +16,43 @@
     </style>
 </head>
 <body class="bg-gray-800 flex flex-col w-[95%] mx-auto"> <!-- Body dengan w-[95%] dan mx-auto -->
-
+<div class="min-h-screen flex flex-col">
     <!-- Header Section -->
-    <header class="text-white flex justify-between items-center p-4 bg-gray-800">
+    <header class="text-white flex justify-between items-center p-4 bg-gray-800 relative">
         <h1 class="text-3xl font-bold">DR AKTA PERCETAKAN</h1>
         @guest
-            <span>Hai Kamu</span>
+        <span>Halo, Selamat Datang</span>
         @else
-            @if (Auth::check() && Auth::user()->role === 'admin')
-                <span>Hai Admin, <a href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" class="hover:text-teal-300">Logout
-            </a>
-            <form id="logout-form" action="{{ route('logout') }}" method="POST" class="hidden">
-                @csrf
-            </form></span>
-            @elseif (Auth::check() && Auth::user()->role === 'pelanggan')
-                <span>Hai Pelanggan, <a href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" class="hover:text-teal-300">Logout
-            </a>
-            <form id="logout-form" action="{{ route('logout') }}" method="POST" class="hidden">
-                @csrf
-            </form></span>
-            @endif
+            <div class="relative">
+                @if(Auth::user()->role === 'admin')
+                    <button class="flex items-center bg-gray-700 px-4 py-2 rounded hover:bg-white hover:rounded-lg hover:text-gray-900 focus:outline-none rounded-lg">
+                        <a href="{{ route('logout') }}" 
+                        onclick="event.preventDefault(); document.getElementById('logout-form').submit();" 
+                        class="block">Hai Admin, Logout</a>
+                    </button>
+                    <form id="logout-form" action="{{ route('logout') }}" method="POST" class="hidden">
+                        @csrf
+                    </form>
+                @else
+                    <button id="dropdownButton" class="flex items-center bg-gray-700 px-4 py-2 rounded hover:bg-gray-600 focus:outline-none rounded-lg">
+                        Hai, {{ Auth::user()->nama_lengkap }}
+                    </button>
+
+                    <div id="dropdownMenu" class="hidden absolute right-0 mt-2 w-48 bg-white text-black rounded shadow-lg z-50">
+                        <a href="{{ route('profile') }}" class="block px-4 py-2 hover:bg-gray-200">Profil</a>
+                        <a href="{{ route('logout') }}" 
+                        onclick="event.preventDefault(); document.getElementById('logout-form').submit();" 
+                        class="block px-4 py-2 hover:bg-gray-200">
+                            Logout
+                        </a>
+                        <form id="logout-form" action="{{ route('logout') }}" method="POST" class="hidden">
+                        @csrf
+                        </form>
+                    </div>
+                @endif
+            </div>
         @endguest
+
     </header>
 
     <!-- Navbar Section -->
@@ -44,11 +61,12 @@
             <div class="bg-teal-600 p-4 rounded-lg shadow-lg">
                 <nav class="flex justify-between items-center w-full">
                     <div class="flex space-x-8">
-                        <a href="{{ auth()->check() ? route('product.index') : route('home') }}" class="text-black hover:text-white">Home</a>
-                        <a href="{{route('login')}}" class="text-black text-lg">Cek Pesanan</a>
-                        <a href="{{route('profil-perusahaan')}}" class="text-black text-lg">Profil Perusahaan</a>
+                        <a href="{{ auth()->check() ? route('product.index') : route('home') }}" class="text-black text-lg hover:text-white">Home</a>
+                        <a href="{{route('product.index')}}" class="text-black text-lg hover:text-white">Katalog Produk</a>
+                        <a href="{{route('login')}}" class="text-black text-lg hover:text-white">Cek Pesanan</a>
+                        <a href="{{route('profil-perusahaan')}}" class="text-black text-lg hover:text-white">Profil Perusahaan</a>
                     </div>
-                    <a href="{{route('login')}}" class="bg-teal-400 text-black px-4 py-2 border border-black rounded">Masuk/Daftar</a>
+                    <a href="{{route('login')}}" class="bg-teal-400 text-black px-4 py-2 border border-black rounded hover:bg-white hover:text-teal-600">Masuk/Daftar</a>
                 </nav>
             </div>
         </div>
@@ -58,23 +76,26 @@
                 <div class="bg-teal-600 p-4 rounded-lg shadow-lg">
                     <nav class="flex justify-between items-center w-full">
                         <div class="flex space-x-8">
-                            <a href="{{route('HomeAdmin')}}" class="text-black text-lg">Home</a>
-                            <a href="{{route('product.index')}}" class="text-black text-lg">Data Produk</a>
-                            <a href="{{route('data-pemesanan')}}" class="text-black text-lg">Data Pemesanan</a>
-                            <a href="{{route('laporan')}}" class="text-black text-lg">Laporan</a>
-                            <a href="{{route('profil-perusahaan')}}" class="text-black text-lg">Profil Perusahaan</a>
+                            <a href="{{route('HomeAdmin')}}" class="hover:text-white text-black text-lg">Home</a>
+                            <a href="{{route('product.index')}}" class="hover:text-white text-black text-lg">Data Produk</a>
+                            <a href="{{route('data-pemesanan')}}" class="hover:text-white text-black text-lg">Data Pemesanan</a>
+                            <a href="{{route('laporan')}}" class="hover:text-white text-black text-lg">Laporan</a>
+                            <a href="{{route('profil-perusahaan-edit')}}" class="hover:text-white text-black text-lg">Manajemen Profil Perusahaan</a>
+                            <a href="{{route('manajemen-user')}}" class="hover:text-white text-black text-lg">Manajemen User</a>
+                            <a href="{{route('beranda-edit')}}" class="hover:text-white text-black text-lg">Manajemen Beranda</a>
                         </div>
                     </nav>
                 </div>
             </div>
         @elseif (Auth::check() && Auth::user()->role === 'pelanggan')
-            <!-- Bagian Keranjang & Navbar -->
+            <!--Navbar -->
             <div class="w-full mx-auto mt-2">
                 <div class="bg-teal-600 p-4 rounded-lg shadow-lg flex justify-between items-center">
                     <div class="flex space-x-4">
-                        <a href="{{route('product.index')}}" class="text-black hover:text-white">Home</a>
-                        <a href="{{route('data-pesanan')}}" class="text-black hover:text-white">Cek Pesanan</a>
-                        <a href="{{route('profil-perusahaan')}}" class="text-black hover:text-white">Profil Perusahaan</a>
+                        <a href="{{route('home')}}" class="text-black text-lg hover:text-white">Home</a>
+                        <a href="{{route('product.index')}}" class="text-black text-lg hover:text-white">Katalog Produk</a>
+                        <a href="{{route('data-pesanan')}}" class="text-black text-lg hover:text-white">Cek Pesanan</a>
+                        <a href="{{route('profil-perusahaan')}}" class="text-black text-lg hover:text-white">Profil Perusahaan</a>
                     </div>
                     <div class="flex items-center space-x-4 ml-auto"> <!-- ml-auto untuk memastikan berada di sebelah kanan -->
                         <div class="relative">
@@ -86,9 +107,20 @@
                 </div>
             </div>
 
+            <!-- Modal Konfirmasi Hapus -->
+            <div id="confirmationModal" class="fixed inset-0 bg-gray-800 bg-opacity-50 z-50 hidden flex items-center justify-center">
+                <div class="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
+                    <h2 class="text-lg font-bold mb-4">Apakah Anda ingin menghapus produk yang dipilih?</h2>
+                    <div class="flex justify-end space-x-4">
+                        <button id="confirmDeleteButton" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-400">Ya</button>
+                        <button id="cancelDeleteButton" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-400">Tidak</button>
+                    </div>
+                </div>
+            </div>
+
             <!-- Sidebar Keranjang -->
             <div id="cartSidebar" class="fixed inset-y-0 right-0 bg-gray-800 bg-opacity-50 z-40 hidden">
-                <div class="w-full max-w-md bg-cyan-200 p-4 border border-black h-full overflow-y-auto">
+                <div class="w-full max-w-md bg-teal-200 p-4 border border-black h-full overflow-y-auto">
                     <!-- Header -->
                     <div class="flex items-center mb-4">
                         <i class="fas fa-arrow-left text-2xl cursor-pointer" id="closeCart"></i>
@@ -106,11 +138,13 @@
                     </div>
 
                     <div class="flex justify-between">
-                        <button id="clearCartButton" class="bg-red-500 text-white px-4 py-2">Hapus</button>
-                        <button id="checkoutButton" class="bg-cyan-400 text-black px-4 py-2">Bayar</button>
+                        <button id="checkoutButton" class="bg-teal-500 text-white px-4 py-2 rounded-lg hover:bg-teal-300 hover:text-teal-500">Bayar</button>
+                        <button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-300 hover:text-red-500" id="deleteSelected">Hapus</button>
                     </div>
                 </div>
             </div>
+
+            
 
             <!-- Container Modal -->
             <div id="paymentModal" class="hidden fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
@@ -126,358 +160,357 @@
                     </div>
 
                     <!-- Total Harga -->
-                    <div id="totalHargaContainer" class="mb-2 bg-yellow-400 text-white px-4 py-2 rounded text-center mt-4">
-                        <span class="text-lg font-semibold">Total Harga: </span>
-                        <span id="totalHarga" class="text-xl font-bold">Rp0</span>
+                    <div id="totalHargaContainer" class="mb-2 bg-teal-600 text-white px-4 py-2 rounded text-center mt-4">
+                        <span class="text-lg font-semibold">Total Harga:</span>
+                        <span id="totalHarga" class="text-lg font-bold">0</span>
                     </div>
 
-                    <div>
-                        <label for="payment_method" class="block font-medium mb-2">Mode Pembayaran</label>
-                        <select name="payment_method" class="border border-gray-300 rounded-lg p-2 w-full">
-                            <option value="">-- Pilih Jenis Pembayaran --</option>
-                            <option value="dp">DP</option>
-                            <option value="lunas">LUNAS</option>
-                        </select>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4 mt-4">
+                    <div class="mb-2 bg-teal-600 px-4 py-2 rounded mt-4">
                         <div>
-                            <label for="bank_name" class="block font-medium mb-2">Pilih Bank</label>
-                            <select name="bank_name" class="border border-gray-300 rounded-lg p-2 w-full">
-                                <option value="">-- Pilih Bank --</option>
-                                <option value="BCA">BCA</option>
-                                <option value="Mandiri">Mandiri</option>
-                                <option value="BRI">BRI</option>
-                                <option value="BNI">BNI</option>
+                            <label for="payment_method" class="block font-large text-white font-bold mb-2">Mode Pembayaran</label>
+                            <select name="payment_method" class="bg-teal-900 text-white rounded-lg p-2 w-full">
+                                <option value="">-- Pilih Jenis Pembayaran --</option>
+                                <option value="dp">DP</option>
+                                <option value="lunas">LUNAS</option>
                             </select>
                         </div>
-                        <div>
-                            <label for="proof_of_payment" class="block font-medium mb-2">Unggah Bukti Pembayaran</label>
-                            <input type="file" name="proof_of_payment" class="border border-gray-300 rounded-lg p-2 w-full">
+
+                        <div class="grid grid-cols-2 gap-4 mt-4">
+                            <div>
+                                <label for="bank_name" class="block font-large text-white font-bold mb-2">Pilih Bank</label>
+                                <select name="bank_name" class="bg-teal-900 text-white rounded-lg p-2 w-full">
+                                    <option value="">-- Pilih Bank --</option>
+                                    <option value="BCA">BCA</option>
+                                    <option value="Mandiri">Mandiri</option>
+                                    <option value="BRI">BRI</option>
+                                    <option value="BNI">BNI</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="proof_of_payment" class="block font-large text-white font-bold mb-2">Unggah Bukti Pembayaran</label>
+                                <input type="file" name="proof_of_payment" class="rounded-lg p-2 bg-teal-900 text-white w-full">
+                            </div>
                         </div>
                     </div>
                     <!-- Tombol Aksi -->
                     <div class="flex justify-center mt-4 space-x-4">
-                        <button type="button" class="bg-cyan-400 text-white px-4 py-2 rounded" id="payButton">Bayar</button>
-                        <button type="button" class="bg-red-400 text-white px-4 py-2 rounded" id="cancelButton">Cancel</button>
+                        <button type="button" class="bg-teal-500 text-white px-4 py-2 rounded hover:bg-teal-300 hover:text-teal-500" id="payButton">Bayar</button>
+                        <button type="button" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-300 hover:text-red-500" id="cancelButton">Cancel</button>
                     </div>
                 </div>
             </div>
+            
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            console.log("Script berjalan!");
 
-            <script>
-                function updateCartItems() {
-                        const cart = JSON.parse(localStorage.getItem('cart')) || [];
-                        const cartItemsContainer = document.getElementById('cartItems');
-                        const totalAmountElement = document.getElementById("totalAmount");
+            const dropdownButton = document.getElementById("dropdownButton");
+            const dropdownMenu = document.getElementById("dropdownMenu");
 
-                        cartItemsContainer.innerHTML = '';
+            dropdownButton.addEventListener("click", function (event) {
+                event.stopPropagation(); // Menghentikan propagasi klik agar tidak memicu klik pada dokumen
+                dropdownMenu.classList.toggle("hidden");
+            });
 
-                        if (cart.length === 0) {
-                            cartItemsContainer.innerHTML = '<p>Keranjang kosong</p>';
-                            totalAmountElement.innerText = "0";
-                            return;
-                        }
+            // Menyembunyikan dropdown saat klik di luar
+            document.addEventListener("click", function () {
+                if (!dropdownMenu.classList.contains("hidden")) {
+                    dropdownMenu.classList.add("hidden");
+                }
+            });
 
-                        let totalAmount = 0;
-                        cart.forEach((item, index) => {
-                            console.log("id_pesanan:",item.id_pesanan); 
-                            if (item.harga && item.kuantitas && item.id_produk) {
-                                totalAmount += item.harga * item.kuantitas;
+            const updateCartItems = () => {
+                fetch('/cart/user', {  
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    }
+                })
+                .then(response => response.json())
+                .then(cart => {
+                    console.log('Data cart:', cart);
+                    const cartItemsContainer = document.getElementById('cartItems');
+                    const totalAmountElement = document.getElementById('totalAmount');
+                    cartItemsContainer.innerHTML = '';
 
-                                const cartItem = `
-                                    <div class="flex items-center mb-4" id="cart-item-${index}">
-                                        <input class="w-6 h-6 mr-4 checkbox-item" type="checkbox" data-order-id="${item.id_pesanan}" />
-                                        <img alt="${item.nama_produk}" class="w-24 h-24 mr-4" src="${item.gambar}" />
-                                        <div>
-                                            <p class="text-lg font-bold">${item.nama_produk}</p>
-                                            <p class="text-lg">Rp${item.harga.toLocaleString()}</p>
-                                        </div>
-                                        <div class="flex items-center ml-auto">
-                                            <button class="w-8 h-8 border border-black" onclick="decreaseQuantity('${item.id_produk}')">-</button>
-                                            <span class="w-8 h-8 flex items-center justify-center border-t border-b border-black">${item.kuantitas}</span>
-                                            <button class="w-8 h-8 border border-black" onclick="increaseQuantity('${item.id_produk}')">+</button>
+                    if (!cart || cart.length === 0) {
+                        cartItemsContainer.innerHTML = '<p>Keranjang kosong</p>';
+                        totalAmountElement.innerText = '0';
+                        return;
+                    }
+
+                    let totalAmount = 0;
+
+                    cart.forEach(item => {
+                        if (item && item.product) {
+                            const totalHargaProduk = item.product.harga * item.kuantitas;
+                            totalAmount += totalHargaProduk;
+
+                            const cartItem = `
+                                <div class="flex items-center mb-4">
+                                    <input type="checkbox" class="cart-checkbox" data-cart-id="${item.id_cart}" />
+                                    <img 
+                                        alt="${item.product.nama_produk}" 
+                                        class="w-24 h-24 mr-4 rounded-lg object-cover" 
+                                        src="${item.product.gambar}" 
+                                        onerror="this.src='/images/placeholder.png'; this.onerror=null;"
+                                    />
+                                    <div>
+                                        <p class="text-lg font-bold">${item.product.nama_produk}</p>
+                                        <p class="text-lg">Rp${Number(totalHargaProduk).toLocaleString('id-ID')}</p>
+                                        <div class="flex items-center">
+                                            <button class="decrease-quantity text-2xl" data-cart-id="${item.id_cart}">-</button>
+                                            <input type="number" value="${item.kuantitas}" class="quantity-input w-12 text-center mx-2" data-cart-id="${item.id_cart}" />
+                                            <button class="increase-quantity text-2xl" data-cart-id="${item.id_cart}">+</button>
                                         </div>
                                     </div>
-                                `;
-                                cartItemsContainer.innerHTML += cartItem;
-                            }
-                        });
-                        totalAmountElement.innerText = totalAmount.toLocaleString();
-                    }
-                    
-                // Function to decrease product quantity
-                function decreaseQuantity(productId) {
-                            const cart = JSON.parse(localStorage.getItem('cart')) || [];
-                            const productIndex = cart.findIndex(item => item.id_produk === productId);
-
-                            if (productIndex !== -1 && cart[productIndex].kuantitas > 1) {
-                                cart[productIndex].kuantitas--;
-                                localStorage.setItem('cart', JSON.stringify(cart));
-                                updateCartItems();
-                            }
+                                </div>`;
+                            cartItemsContainer.innerHTML += cartItem;
                         }
+                    });
 
-                    // Function to increase product quantity
-                    function increaseQuantity(productId) {
-                        const cart = JSON.parse(localStorage.getItem('cart')) || [];
-                        const productIndex = cart.findIndex(item => item.id_produk === productId);
+                    totalAmountElement.innerText = totalAmount.toLocaleString('id-ID');
+                })
+                .catch(error => {
+                    console.error('Error memuat keranjang:', error);
+                    document.getElementById('cartItems').innerHTML = '<p>Error memuat keranjang. Silakan coba lagi.</p>';
+                });
+            };
 
-                        if (productIndex !== -1) {
-                            cart[productIndex].kuantitas++;
-                            localStorage.setItem('cart', JSON.stringify(cart));
-                            updateCartItems();
-                        }
-                    }
+            const removeSelectedItems = () => {
+                const selectedCheckboxes = document.querySelectorAll('.cart-checkbox:checked');
+                const cartIdsToDelete = Array.from(selectedCheckboxes).map(checkbox => checkbox.getAttribute('data-cart-id'));
 
-                document.addEventListener("DOMContentLoaded", function() {
+                if (cartIdsToDelete.length === 0) {
+                    alert('Pilih item yang ingin dihapus!');
+                    return;
+                }
 
-                    // Function to submit transactions
-                    function submitAllTransactions() {
-                        const checkboxes = document.querySelectorAll(".checkbox-item:checked");
-                        const cart = JSON.parse(localStorage.getItem("cart")) || [];
-                        console.log("Isi cart:", cart);
-                        
-                        // Mengambil item yang dipilih berdasarkan id_pesanan
-                        const selectedItems = Array.from(checkboxes).map((checkbox) => {
-                            const orderId = checkbox.dataset.orderId;
-                            const item = cart.find((item) => item.id_pesanan === orderId);  // Temukan item berdasarkan id_pesanan
-                            
-                            // Jika item tidak ditemukan, log kesalahan
-                            if (!item) {
-                                console.error(`Item dengan id_pesanan ${orderId} tidak ditemukan di cart.`);
-                            }
-                            return item;  // Bisa undefined jika tidak ditemukan
-                        }).filter(item => item !== undefined);  // Menyaring item undefined
-
-                        if (selectedItems.length === 0) {
-                            alert("Pilih item yang ingin dibayar!");
-                            return;
-                        }
-
-                        const paymentMethod = document.querySelector("select[name='payment_method']").value;
-                        const bankName = document.querySelector("select[name='bank_name']").value;
-                        const proofOfPayment = document.querySelector("input[name='proof_of_payment']").files[0];
-                        const customImage = document.querySelector("input[name='custom_image']").files[0];
-
-                        if (!paymentMethod || !bankName || !proofOfPayment) {
-                            alert("Lengkapi semua informasi pembayaran!");
-                            return;
-                        }
-
-                        const formData = new FormData();
-                        formData.append("payment_method", paymentMethod);
-                        formData.append("bank_name", bankName);
-                        formData.append("proof_of_payment", proofOfPayment);
-                        formData.append("custom_image", customImage);
-
-                        selectedItems.forEach((item, index) => {
-                            if (!item.id_pesanan) {
-                                console.error(`Order ID untuk produk ${item.id_produk} tidak valid!`);
-                                return;  // Jika id_pesanan kosong, hentikan pengiriman
-                            }
-
-                            formData.append(`cart[${index}][product_id]`, item.id_produk);  // Menggunakan id_produk
-                            formData.append(`cart[${index}][order_id]`, item.id_pesanan);  // Menggunakan id_pesanan
-                            formData.append(`cart[${index}][kuantitas]`, item.kuantitas);
-                            formData.append(`cart[${index}][total_harga]`, item.harga * item.kuantitas);
-                            formData.append(`cart[${index}][total_pembayaran]`, item.harga * item.kuantitas);
-                        });
-
-                        // Log untuk melihat data yang akan dikirimkan
-                        console.log("FormData yang dikirim:", formData);
-
-                        fetch("/transaction/cart", {
-                            method: "POST",
-                            headers: {
-                                "X-CSRF-TOKEN": "{{ csrf_token() }}",
-                            },
-                            body: formData,
-                        })
-                        .then((response) => response.json())
-                        .then((data) => {
-                            if (data.success) {
-                                alert("Pembayaran berhasil!");
-                                window.location.href = "{{ route('data-pesanan') }}";
-                            } else {
-                                alert("Gagal melakukan pembayaran.");
-                            }
-                        })
-                        .catch((error) => console.error("Error:", error));
-                    }
-
-                    const payButton = document.getElementById("payButton");
-                    if (payButton) {
-                        payButton.addEventListener("click", submitAllTransactions);
-                    }
-
-
-                    
-
-                    document.getElementById("clearCartButton").addEventListener("click", function() {
-                        const selectedOrderIds = []; // Menyimpan id pesanan yang dipilih untuk dihapus
-
-                        const checkboxes = document.querySelectorAll(".checkbox-item:checked");
-                        checkboxes.forEach((checkbox) => {
-                            const orderId = checkbox.dataset.orderId; // Ambil ID pesanan dari checkbox
-                            selectedOrderIds.push(orderId); // Menambahkan id pesanan yang dipilih
-                        });
-
-                        if (selectedOrderIds.length === 0) {
-                            alert("Pilih item yang ingin dihapus!");
-                            return;
-                        }
-
-                        // Ambil cart dari localStorage
-                        let cart = JSON.parse(localStorage.getItem("cart")) || [];
-
-                        // Filter cart untuk menghapus item dengan id_pesanan yang dipilih
-                        cart = cart.filter(item => !selectedOrderIds.includes(item.id_pesanan));
-
-                        // Simpan kembali cart yang sudah diupdate
-                        localStorage.setItem("cart", JSON.stringify(cart));
-
-                        // Perbarui tampilan keranjang
-                        updateCartItems();
-
-                        // Kirim request ke server untuk menghapus pesanan
-                        fetch('/order/multipledestroy', {
+                Promise.all(
+                    cartIdsToDelete.map(cartId =>
+                        fetch(`/cart/${cartId}`, {
                             method: 'DELETE',
                             headers: {
                                 'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
                             },
-                            body: JSON.stringify({ order_ids: selectedOrderIds })
                         })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.message) {
-                                alert(data.message);
-                            } else {
-                                alert('Gagal menghapus pesanan.');
-                            }
-                        })
-                        .catch((error) => {
-                            console.error('Terjadi kesalahan:', error);
-                            alert('Terjadi kesalahan saat menghapus pesanan.');
-                        });
-                    });
-
-                    document.getElementById('cartIcon').addEventListener('click', () => {
-                        const cartSidebar = document.getElementById('cartSidebar');
-                        cartSidebar.classList.remove('hidden');
-                        updateCartItems();
-                    });
-
-                    document.getElementById('closeCart').addEventListener('click', () => {
-                        const cartSidebar = document.getElementById('cartSidebar');
-                        cartSidebar.classList.add('hidden');
-                    });
-
-                    document.getElementById('checkoutButton').addEventListener('click', () => {
-                        const checkboxes = document.querySelectorAll(".checkbox-item:checked");
-                        const cart = JSON.parse(localStorage.getItem('cart')) || [];
-                        console.log("Isi cart setelah menambahkan produk:", cart);
-
-                        const selectedItems = Array.from(checkboxes).map(checkbox => {
-                            const orderId = checkbox.dataset.orderId;
-                            console.log("Mencari item dengan id_pesanan:", orderId); // Verifikasi ID yang dipilih
-                            const item = cart.find(item => item.id_pesanan === orderId);
-                            
-                            if (!item) {
-                                console.error(`Item dengan id_pesanan ${orderId} tidak ditemukan di cart.`);
-                            }
-                            return item;  // Bisa undefined jika tidak ditemukan
-                        }).filter(item => item !== undefined);  // Menyaring item undefined
-
-                        if (selectedItems.length === 0) {
-                            alert("Pilih item yang ingin dibayar!");
-                            return;
-                        }
-
-                        console.log("Selected items untuk pembayaran:", selectedItems);
-                        openPaymentModal(selectedItems);  // Fungsi yang membuka modal pembayaran
-                    });
-
-                    // Fungsi untuk membuka modal pembayaran
-                    function openPaymentModal(selectedItems) {
-                        const modalProductCards = document.getElementById("modalProductCards");
-                        const paymentModal = document.getElementById("paymentModal");
-                        const totalHargaElement = document.getElementById("totalHarga");
-
-                        modalProductCards.innerHTML = "";
-                        let totalHarga = 0;
-
-                        selectedItems.forEach((item) => {
-                            if (item && item.harga && item.kuantitas) {
-                                const hargaProduk = item.harga * item.kuantitas;
-                                totalHarga += hargaProduk;
-
-                                const cardHTML = `
-                                    <div class="bg-white p-4 border border-gray-300 rounded-lg">
-                                        <h2 class="text-lg font-bold">Pesanan: ${item.nama_produk}</h2>
-                                        <div class="grid grid-cols-2 gap-4 mt-4">
-                                            <input type="hidden" name="order_id" value="${item.id_pesanan}">
-                                            <input type="hidden" name="product_id" value="${item.id_produk}">
-                                            <div>
-                                                <label class="block mb-2">Nama Lengkap</label>
-                                                <input type="text" name="nama_lengkap" value="{{ Auth::user()->nama_lengkap }}" class="w-full p-2 border border-gray-300 rounded" disabled>
-                                            </div>
-                                            <div>
-                                                <label class="block mb-2">Alamat</label>
-                                                <input type="text" name="alamat" value="{{ Auth::user()->alamat }}" class="w-full p-2 border border-gray-300 rounded" disabled>
-                                            </div>
-                                            <div>
-                                                <label class="block mb-2">Nomor Telepon/WA</label>
-                                                <input type="text" name="telepon" value="{{ Auth::user()->telepon }}" class="w-full p-2 border border-gray-300 rounded" disabled>
-                                            </div>
-                                            <div>
-                                                <label class="block mb-2">Upload Custom Gambar</label>
-                                                <input type="file" name="custom_image" accept="image/*" class="w-full p-2 border border-gray-300 rounded">
-                                            </div>
-                                            <div>
-                                                <label class="block mb-2">Jumlah Produk</label>
-                                                <input type="number" name="quantity" value="${item.kuantitas}" class="w-full p-2 border border-gray-300 rounded" disabled>
-                                            </div>
-                                        </div>
-                                    </div>
-                                `;
-                                modalProductCards.innerHTML += cardHTML;
-                            } else {
-                                console.error(`Item dengan id_produk ${item.id_produk} tidak memiliki harga atau kuantitas yang valid.`);
-                            }
-                        });
-
-                        totalHargaElement.innerText = totalHarga;
-
-                        // Menampilkan modal pembayaran
-                        paymentModal.classList.remove("hidden");
-
-                        // Menangani pembayaran sukses
-                        const payButton = document.getElementById('payButton');
-                        payButton.addEventListener('click', () => {
-                            // Hapus produk yang sudah dibayar dari keranjang
-                            const cart = JSON.parse(localStorage.getItem('cart')) || [];
-                            const selectedOrderIds = selectedItems.map(item => item.id_pesanan);  // Ambil id_pesanan dari selectedItems
-
-                            // Filter cart untuk menghapus item dengan id_pesanan yang dipilih
-                            const remainingItems = cart.filter(item => !selectedOrderIds.includes(item.id_pesanan));
-                            localStorage.setItem('cart', JSON.stringify(remainingItems));
-
-                            alert("Pembayaran berhasil dan produk telah dihapus dari keranjang.");
-
-                            // Tutup modal setelah pembayaran
-                            paymentModal.classList.add("hidden");
-
-                            // Perbarui tampilan keranjang
-                            updateCartItems();
-
-                            // Perbarui tampilan keranjang atau halaman lainnya
-                            location.reload();  // Jika ingin me-refresh halaman setelah transaksi
-                        });
+                    )
+                )
+                .then(responses => {
+                    const errors = responses.filter(response => !response.ok);
+                    if (errors.length > 0) {
+                        alert('Beberapa item gagal dihapus.');
+                    } else {
+                        alert('Item berhasil dihapus.');
                     }
+                    updateCartItems();
+                })
+                .catch(error => console.error('Error menghapus item:', error));
+            };
 
+            document.getElementById('deleteSelected').addEventListener('click', removeSelectedItems);
+
+            document.getElementById('checkoutButton').addEventListener('click', function() {
+                const cartSidebar = document.getElementById('cartSidebar');
+                const paymentModal = document.getElementById('paymentModal');
+
+                cartSidebar.classList.add('hidden');
+                paymentModal.classList.remove('hidden');
+                
+                const modalProductCards = document.getElementById('modalProductCards');
+                modalProductCards.innerHTML = ''; // Clear previous content
+                const cart = JSON.parse(localStorage.getItem('cart')) || [];
+                
+                let totalHarga = 0;
+                cart.forEach(item => {
+                    const hargaProduk = item.harga * item.kuantitas;
+                    totalHarga += hargaProduk;
+
+                    const productCard = `
+                        <div class="bg-teal-600 text-white p-4 rounded-lg">
+                            <h2 class="text-lg font-bold">Pesanan: ${item.nama_produk}</h2>
+                            <div class="grid grid-cols-2 gap-4 mt-4">
+                                <input type="hidden" name="order_id" value="${item.id_pesanan}">
+                                <input type="hidden" name="product_id" value="${item.id_produk}">
+                                <div>
+                                    <img src="${item.gambar}" alt="Gambar Produk" class="w-32 h-32 object-cover rounded-lg">
+                                </div><br>
+                                <div>
+                                    <label class="block mb-2">Nama Lengkap</label>
+                                    <input type="text" name="nama_lengkap" value="{{ Auth::user()->nama_lengkap }}" class="w-full p-2 rounded bg-teal-900" disabled>
+                                </div>
+                                <div>
+                                    <label class="block mb-2">Alamat</label>
+                                    <input type="text" name="alamat" value="{{ Auth::user()->alamat }}" class="w-full p-2 bg-teal-900 rounded" disabled>
+                                </div>
+                                <div>
+                                    <label class="block mb-2">Nomor Telepon/WA</label>
+                                    <input type="text" name="telepon" value="{{ Auth::user()->telepon }}" class="w-full p-2 bg-teal-900 rounded" disabled>
+                                </div>
+                                <div>
+                                    <label class="block mb-2">Upload Custom Gambar</label>
+                                    <input type="file" name="custom_image" accept="image/*" class="w-full p-2 bg-teal-900 rounded">
+                                </div>
+                                <div>
+                                    <label class="block mb-2">Jumlah Produk</label>
+                                    <input type="number" name="quantity" value="${item.kuantitas}" class="w-full p-2 rounded bg-teal-900" disabled>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    modalProductCards.innerHTML += productCard;
+
+                    fetch('/order/store', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        },
+                        body: JSON.stringify({
+                            product_id: item.id_produk,
+                            kuantitas: item.kuantitas,
+                            total_pembayaran: hargaProduk
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => console.log(data))
+                    .catch(error => console.error('Error:', error));
                 });
-            </script>
+
+                document.getElementById('totalHarga').innerText = totalHarga.toLocaleString('id-ID');
+            });
+
+            document.getElementById('cancelButton').addEventListener('click', function() {
+                const paymentModal = document.getElementById('paymentModal');
+                paymentModal.classList.add('hidden');
+            });
+
+            document.getElementById('payButton').addEventListener('click', async function() {
+            // 1. Get all checked items from cart
+            const selectedCheckboxes = document.querySelectorAll('.cart-checkbox:checked');
+            
+            if (selectedCheckboxes.length === 0) {
+                alert("Pilih item yang ingin dibayar!");
+                return;
+            }
+
+            // 2. Get and validate form data
+            const paymentMethod = document.querySelector("select[name='payment_method']").value;
+            const bankName = document.querySelector("select[name='bank_name']").value;
+            const proofOfPaymentInput = document.querySelector("input[name='proof_of_payment']");
+            const customImageInput = document.querySelector("input[name='custom_image']");
+
+            if (!paymentMethod || !bankName || !proofOfPaymentInput.files[0]) {
+                alert("Lengkapi semua informasi pembayaran!");
+                return;
+            }
+
+            try {
+                // 3. Get cart items data
+                const response = await fetch('/cart/user', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    }
+                });
+                
+                const cartItems = await response.json();
+                const selectedCartIds = Array.from(selectedCheckboxes).map(cb => cb.getAttribute('data-cart-id'));
+                const selectedItems = cartItems.filter(item => selectedCartIds.includes(item.id_cart.toString()));
+
+                // 4. Create orders first
+                const orderPromises = selectedItems.map(item => 
+                    fetch('/order/store', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        },
+                        body: JSON.stringify({
+                            product_id: item.id_produk,
+                            kuantitas: item.kuantitas,
+                            total_pembayaran: item.product.harga * item.kuantitas
+                        })
+                    }).then(res => res.json())
+                );
+
+                const orders = await Promise.all(orderPromises);
+
+                // 5. Prepare form data with files
+                const formData = new FormData();
+                formData.append("payment_method", paymentMethod);
+                formData.append("bank_name", bankName);
+                
+                // Add proof of payment file
+                if (proofOfPaymentInput.files[0]) {
+                    formData.append("proof_of_payment", proofOfPaymentInput.files[0]);
+                }
+                
+                // Add custom image if exists
+                if (customImageInput && customImageInput.files[0]) {
+                    formData.append("custom_image", customImageInput.files[0]);
+                }
+
+                // 6. Add cart items with their order IDs
+                selectedItems.forEach((item, index) => {
+                    if (orders[index] && orders[index].order_id) {
+                        formData.append(`cart[${index}][user_id]`, item.id_user);
+                        formData.append(`cart[${index}][product_id]`, item.id_produk);
+                        formData.append(`cart[${index}][order_id]`, orders[index].order_id);
+                        formData.append(`cart[${index}][kuantitas]`, item.kuantitas);
+                        formData.append(`cart[${index}][total_harga]`, item.product.harga * item.kuantitas);
+                        formData.append(`cart[${index}][total_pembayaran]`, item.product.harga * item.kuantitas);
+                    }
+                });
+
+                // 7. Send transaction request
+                const transactionResponse = await fetch("/transaction/cart", {
+                    method: "POST",
+                    headers: {
+                        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    },
+                    body: formData
+                });
+
+                const result = await transactionResponse.json();
+
+                if (result.success) {
+                    alert("Pembayaran berhasil!");
+                    updateCartItems();
+                    document.getElementById('paymentModal').classList.add("hidden");
+                    // Optional: Clear form
+                    proofOfPaymentInput.value = '';
+                    if (customImageInput) customImageInput.value = '';
+                } else {
+                    throw new Error(result.message || "Gagal melakukan pembayaran.");
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                alert(error.message || "Terjadi kesalahan saat memproses pembayaran.");
+            }
+        });
+
+
+            document.getElementById('cartIcon').addEventListener('click', () => {
+                const cartSidebar = document.getElementById('cartSidebar');
+                cartSidebar.classList.remove('hidden');
+                updateCartItems();
+            });
+
+            document.getElementById('closeCart').addEventListener('click', () => {
+                const cartSidebar = document.getElementById('cartSidebar');
+                cartSidebar.classList.add('hidden');
+            });
+        });
+    </script>
+
+
+
+
 
 
         @endif
@@ -490,13 +523,9 @@
     </main>
 
     <!-- Footer Section -->
-    <footer class="w-full mx-auto flex flex-column justify-between items-center bg-gray-700 p-4 text-center mt-8"> <!-- Footer dengan w-[95%] dan mx-auto -->
+    <footer class="w-full mx-auto flex flex-col justify-between bg-gray-700 p-4 text-left mt-auto">
         <p class="text-gray-300">&copy; 2024 DR AKTA PERCETAKAN. All rights reserved.</p>
-        <div class="flex justify-center space-x-4 mt-2">
-            <a href="#" class="text-gray-300 hover:text-white"><i class="fab fa-facebook-f"></i></a>
-            <a href="#" class="text-gray-300 hover:text-white"><i class="fab fa-twitter"></i></a>
-            <a href="#" class="text-gray-300 hover:text-white"><i class="fab fa-instagram"></i></a>
-        </div>
     </footer>
+</div>
 </body>
 </html>

@@ -10,13 +10,12 @@
     </div>
 @else
     @foreach($orders as $order)
-    <div class="bg-cyan-100 p-4 rounded-lg shadow-lg w-full mt-4 mb-4">
+    <div class="bg-teal-200 p-4 rounded-lg shadow-lg w-full mt-4 mb-4 hover:bg-teal-300">
         <div class="flex justify-between items-center">
             <div class="flex-1 cursor-pointer" onclick="toggleDetails('{{ $order->id_transaksi }}')">
                 <h1 class="text-lg font-semibold">Pesanan: {{ $order->id_transaksi }}</h1>
                 <span class="text-sm">Klik untuk melihat detail</span>
             </div>
-            <input type="checkbox" id="select-{{ $order->id_transaksi }}" class="order-checkbox" data-id="{{ $order->id_transaksi }}">
         </div>
 
         <div class="mt-4 hidden transition-all duration-300 ease-in-out" id="details-{{ $order->id_transaksi }}">

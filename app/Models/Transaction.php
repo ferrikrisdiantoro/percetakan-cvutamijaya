@@ -20,8 +20,8 @@ class Transaction extends Model
 
     protected $fillable = [
         'id_transaksi',       // Tambahkan id_transaksi ke $fillable jika perlu
-        'id_pelanggan',       // Menggunakan id_pelanggan sesuai dengan kolom pada tabel
-        'id_pesanan',       // Menggunakan id_pelanggan sesuai dengan kolom pada tabel
+        'id_user',       // Menggunakan id_user sesuai dengan kolom pada tabel
+        'id_pesanan',       // Menggunakan id_user sesuai dengan kolom pada tabel
         'mode_pembayaran',
         'total_pembayaran',
         'transfer',
@@ -38,7 +38,7 @@ class Transaction extends Model
     // Relasi ke model User
     public function user()
     {
-        return $this->belongsTo(User::class, 'id_pelanggan'); // Menggunakan 'id_pelanggan' yang sesuai dengan tabel
+        return $this->belongsTo(User::class, 'id_user'); // Menggunakan 'id_pelanggan' yang sesuai dengan tabel
     }
 
         // Relasi ke model User

@@ -2,10 +2,21 @@
 
 @section('content')
 
-<div class="mt-4 w-full bg-cyan-200 p-8 rounded-lg shadow-lg">
+<div class="mt-4 w-full bg-cyan-200 p-8 rounded-lg shadow-lg mb-4">
     <h1 class="text-center text-xl font-bold mb-4">Laporan Penjualan</h1>
+
+    <div class="mb-4 text-right">
+        <button 
+            onclick="window.open('{{ route('print') }}', '_blank').print();"
+            class="bg-cyan-300 p-2 border border-gray-400 rounded">
+            Cetak Laporan
+        </button>
+    </div>
+
+
     <div class="grid grid-cols-3 gap-4 mb-4">
         <form action="{{ route('transaction.search') }}" method="GET" class="grid grid-cols-3 gap-4 w-full">
+            <!-- Form Filter -->
             <div>
                 <label for="startDate" class="block mb-2">Tanggal Mulai</label>
                 <input type="date" id="startDate" name="start_date" class="border border-gray-400 p-2 w-full">
@@ -32,55 +43,58 @@
             </div>
         </form>
     </div>
-        <table class="w-full border-collapse">
-            <thead>
-                <tr class="bg-gray-700 text-white">
-                    <th class="border border-gray-600 p-2">ID Transaksi</th>
-                    <th class="border border-gray-600 p-2">ID Produk</th>
-                    <th class="border border-gray-600 p-2">ID Pelanggan</th>
-                    <th class="border border-gray-600 p-2">ID Pesanan</th>
-                    <th class="border border-gray-600 p-2">Jumlah Barang</th>
-                    <th class="border border-gray-600 p-2">Tanggal Transaksi</th>
-                    <th class="border border-gray-600 p-2">Total Bayar</th>
-                    <th class="border border-gray-600 p-2">Tipe Pembayaran</th>
-                    <th class="border border-gray-600 p-2">Status Pembayaran</th>
-                    <th class="border border-gray-600 p-2">Status Pesanan</th>
+
+    <!-- Table Laporan -->
+    <table class="w-full border-collapse">
+        <thead>
+            <tr class="bg-gray-700 text-white">
+                <th class="border border-gray-600 p-2">ID Transaksi</th>
+                <th class="border border-gray-600 p-2">ID Produk</th>
+                <th class="border border-gray-600 p-2">ID Pelanggan</th>
+                <th class="border border-gray-600 p-2">ID Pesanan</th>
+                <th class="border border-gray-600 p-2">Jumlah Barang</th>
+                <th class="border border-gray-600 p-2">Tanggal Transaksi</th>
+                <th class="border border-gray-600 p-2">Total Bayar</th>
+                <th class="border border-gray-600 p-2">Tipe Pembayaran</th>
+                <th class="border border-gray-600 p-2">Status Pembayaran</th>
+                <th class="border border-gray-600 p-2">Status Pesanan</th>
+            </tr>
+        </thead>
+        <tbody>
+        @if ($transactions->isEmpty())
+            <tr>
+                <td colspan="10" class="text-center text-gray-500">Tidak ada data ditemukan</td>
+            </tr>
+        @else
+            @foreach ($transactions as $transaction)
+                <tr class="bg-gray-800 text-white">
+                    <td class="border border-gray-600 p-2">{{ $transaction->id_transaksi }}</td>
+                    <td class="border border-gray-600 p-2 text-center">
+                        @foreach($transaction->detailTransactions as $detail)
+                            <p>{{ $detail->order->id_produk }} </p>
+                        @endforeach
+                    </td>
+                    <td class="border border-gray-600 p-2">{{ $transaction->id_user }}</td>
+                    <td class="border border-gray-600 p-2">
+                        @foreach($transaction->detailTransactions as $detail)
+                            <p>{{ $detail->order->id_pesanan }} </p>
+                        @endforeach
+                    </td>
+                    <td class="border border-gray-600 p-2 text-center">
+                        @foreach($transaction->detailTransactions as $detail)
+                            <p>{{ $detail->order->kuantitas }} </p>
+                        @endforeach
+                    </td>
+                    <td class="border border-gray-600 p-2">{{ \Carbon\Carbon::parse($transaction->tanggal_transaksi)->format('d/m/Y') }}</td>
+                    <td class="border border-gray-600 p-2">{{ $transaction->total_pembayaran }}</td>
+                    <td class="border border-gray-600 p-2">{{ $transaction->mode_pembayaran }}</td>
+                    <td class="border border-gray-600 p-2">LUNAS</td>
+                    <td class="border border-gray-600 p-2">{{ $transaction->status }}</td>
                 </tr>
-            </thead>
-            <tbody>
-            @if ($transactions->isEmpty())
-                <tr>
-                    <td colspan="10" class="text-center text-gray-500">Tidak ada data ditemukan</td>
-                </tr>
-            @else
-                @foreach ($transactions as $transaction)
-                    <tr class="bg-gray-800 text-white">
-                        <td class="border border-gray-600 p-2">{{ $transaction->id_transaksi }}</td>
-                        <td class="border border-gray-600 p-2 text-center">
-                            @foreach($transaction->detailTransactions as $detail)
-                                <p>{{ $detail->order->id_produk }} </p>
-                            @endforeach
-                        </td>
-                        <td class="border border-gray-600 p-2">{{ $transaction->id_pelanggan }}</td>
-                        <td class="border border-gray-600 p-2">
-                            @foreach($transaction->detailTransactions as $detail)
-                                <p>{{ $detail->order->id_pesanan }} </p>
-                            @endforeach
-                        </td>
-                        <td class="border border-gray-600 p-2 text-center">
-                            @foreach($transaction->detailTransactions as $detail)
-                                <p>{{ $detail->order->kuantitas }} </p>
-                            @endforeach
-                        </td>
-                        <td class="border border-gray-600 p-2">{{ \Carbon\Carbon::parse($transaction->tanggal_transaksi)->format('d/m/Y') }}</td>
-                        <td class="border border-gray-600 p-2">{{ $transaction->total_pembayaran }}</td>
-                        <td class="border border-gray-600 p-2">{{ $transaction->mode_pembayaran }}</td>
-                        <td class="border border-gray-600 p-2">LUNAS</td>
-                        <td class="border border-gray-600 p-2">{{ $transaction->status }}</td>
-                    </tr>
-                @endforeach
-            @endif
-            </tbody>
-        </table>
-    </div>
+            @endforeach
+        @endif
+        </tbody>
+    </table>
+</div>
+
 @endsection

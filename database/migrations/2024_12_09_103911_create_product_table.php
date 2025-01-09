@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('products', function (Blueprint $table) {
             $table->string('id_produk')->primary();  // Primary key custom
             $table->string('nama_produk');          // Nama produk
+            $table->text('deskripsi')->nullable();
             $table->decimal('harga', 10, 2);        // Harga dengan 2 angka desimal
             $table->string('bahan');    // Bahan (opsional)
             $table->string('ukuran');   // Ukuran (opsional)

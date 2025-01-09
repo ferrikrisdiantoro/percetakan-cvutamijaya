@@ -9,11 +9,14 @@
                     <!-- Gambar Produk -->
                     <img alt="{{ $product->nama_produk }}" class="w-full h-48 object-cover mb-4" src="{{ $product->gambar ?? 'https://via.placeholder.com/300' }}" />
                     <h2 class="text-xl font-bold mb-2">{{ $product->nama_produk }}</h2>
+                    <p class="mb-1">{{ $product->deskripsi }}</p>
                     <p class="mb-2">Harga Rp{{ number_format($product->harga, 0, ',', '.') }}</p>
                     <p class="mb-2">Bahan: {{ $product->bahan }}</p>
                     <p class="mb-2">Ukuran: {{ $product->ukuran }}</p>
                     <p class="mb-4">Stok: {{ $product->stok }}</p>
-                    <a href="{{ route('login') }}" class="bg-teal-500 text-white py-2 px-4 rounded">Pesan</a>
+                    <div class="flex justify-center">
+                        <a href="{{ route('login') }}" class="bg-teal-500 text-white items-center py-2 px-4 rounded max-w-[50%] hover:bg-white hover:text-teal-600">Pesan</a>
+                    </div>
                 </div>
             @empty
                 <p class="text-center text-gray-500">Belum ada produk yang tersedia.</p>
@@ -24,9 +27,9 @@
     @if (Auth::user()->role === 'admin')
     <div class="flex flex-col w-full py-8">
         <div class="flex justify-between items-center mb-6">
-            <h1 class="text-2xl text-white font-bold">Product List</h1>
-            <a href="{{ route('product.create') }}" class="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-blue-700">
-            + Add Product
+            <h1 class="text-2xl text-white font-bold">Daftar List Produk</h1>
+            <a href="{{ route('product.create') }}" class="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-white hover:text-teal-600">
+            + Tambah Produk
             </a>
         </div>
 
@@ -36,6 +39,7 @@
                     <tr>
                         <th scope="col" class="px-6 py-3">Nama Produk</th>
                         <th scope="col" class="px-6 py-3">Gambar</th>
+                        <th scope="col" class="px-6 py-3">Deskripsi</th>
                         <th scope="col" class="px-6 py-3">Bahan</th>
                         <th scope="col" class="px-6 py-3">Ukuran</th>
                         <th scope="col" class="px-6 py-3">Harga</th>
@@ -50,6 +54,7 @@
                         {{ $product->nama_produk }}
                         </td>
                         <td class="px-6 py-4"> <img class="h-16 w-16 object-cover rounded" src="{{ $product->gambar }}" alt=""></td>
+                        <td class="px-6 py-4">{{ $product->deskripsi }}</td>
                         <td class="px-6 py-4">{{ $product->bahan }}</td>
                         <td class="px-6 py-4">{{ $product->ukuran }}</td>
                         <td class="px-6 py-4">Rp.{{ number_format($product->harga, 0) }}</td>
@@ -65,7 +70,7 @@
                             <form action="{{ route('product.destroy', $product->id_produk) }}" method="POST">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="focus:outline-none text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900">Delete</button>
+                                <button type="submit" class="focus:outline-none text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900">Hapus</button>
                             </form>
                         </td>
                     </tr>
@@ -84,12 +89,13 @@
                     class="w-full h-48 object-cover mb-4" 
                     src="{{ $product->gambar ? asset($product->gambar) : 'https://via.placeholder.com/300' }}" />
                     <h2 class="text-xl font-bold mb-1">{{ $product->nama_produk }}</h2>
+                    <p class="mb-1">{{ $product->deskripsi }}</p>
                     <p class="mb-1">Harga Rp{{ number_format($product->harga, 0, ',', '.') }}</p>
                     <p class="mb-1">Bahan: {{ $product->bahan }}</p>
                     <p class="mb-1">Ukuran: {{ $product->ukuran }}</p>
                     <p class="mb-4">Stok: {{ $product->stok }}</p>
                     <a href="javascript:void(0)" 
-                    class="bg-teal-500 text-white py-2 px-4 rounded" 
+                    class="bg-teal-500 text-white py-2 px-4 rounded hover:bg-white hover:text-teal-600" 
                     onclick="showOrderModal('{{ $product->id_produk }}', 
                                             '{{ $product->nama_produk }}', 
                                             '{{ $product->harga }}', 
@@ -99,14 +105,12 @@
                     </a>
                 </div>
                 
-
-                <!-- Modal ke 1 -->
-                <div id="orderModal{{ $product->id_produk}}" class="hidden fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
+                <!-- Modal pertama (Order Modal) -->
+                <div id="orderModal{{ $product->id_produk }}" class="hidden fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
                     <div class="bg-white w-[90%] max-w-md p-5 rounded-lg shadow-lg">
                         <img id="modalProductImage{{ $product->id_produk }}" class="w-full h-48 object-cover rounded mb-4" src="" alt="Produk" />
                         <h3 class="text-xl font-semibold mb-4" id="modalProductName{{ $product->id_produk }}">Nama Produk</h3>
                         <p class="text-gray-700 mb-2" id="modalProductPrice{{ $product->id_produk }}">Harga per Unit: Rp0</p>
-                        <!-- Pilihan Jumlah -->
                         <div class="flex items-center justify-between mb-4">
                             <span class="text-gray-700">Jumlah</span>
                             <div class="flex items-center space-x-2">
@@ -116,32 +120,26 @@
                             </div>
                             <input type="hidden" id="productId{{ $product->id_produk }}" value="{{ $product->id_produk}}">
                         </div>
-
-                        <p class="text-gray-700 mb-2">
-                            Total Harga: <span id="modalTotalPrice{{ $product->id_produk }}">Rp0</span>
-                        </p>
-                        <p class="text-gray-700 mb-2">
-                            Stok Tersisa: <span id="modalProductStock{{ $product->id_produk }}">0</span>
-                        </p>
-
+                        <p class="text-gray-700 mb-2">Total Harga: <span id="modalTotalPrice{{ $product->id_produk }}">Rp0</span></p>
+                        <p class="text-gray-700 mb-2">Stok Tersisa: <span id="modalProductStock{{ $product->id_produk }}">0</span></p>
                         <div class="flex justify-between space-x-2">
-                            <button type="button" 
-                                id="buyNowButton{{ $product->id_produk }}" 
-                                class="bg-green-500 text-white px-4 py-2 rounded flex-1 text-center"
-                                onclick="createTransaction('{{ $product->id_produk}}')">
-                                Beli Langsung
-                            </button>
-                            <button type="button" 
-                                    id="addToCartButton{{ $product->id_produk }}" 
-                                    class="bg-blue-500 text-white px-4 py-2 rounded flex-1 text-center"
-                                    onclick="addToCart({{ json_encode($product) }})">
-                                Tambah ke Keranjang
-                            </button>
-
+                            <button type="button" id="buyNowButton{{ $product->id_produk }}" class="bg-green-500 text-white px-4 py-2 rounded flex-1 text-center hover:bg-green-200 hover:text-green-500" onclick="createTransaction('{{ $product->id_produk}}')">Beli Langsung</button>
+                            <button type="button" id="addToCartButton{{ $product->id_produk }}" class="bg-blue-500 text-white px-4 py-2 rounded flex-1 text-center hover:bg-blue-200 hover:text-blue-500" onclick="addToCart({{ json_encode($product) }})">Tambah ke Keranjang</button>
                         </div>
-                        <button type="button" class="block mt-4 mx-auto bg-gray-300 text-gray-800 px-4 py-2 rounded" onclick="closeModal('{{ $product->id_produk }}')">Batal</button>
+                        <button type="button" class="block mt-4 mx-auto bg-gray-800 text-gray-300 px-4 py-2 rounded hover:bg-gray-300 hover:text-gray-800" onclick="closeModal('{{ $product->id_produk }}')">Batal</button>
                     </div>
                 </div>
+
+                <!-- Modal untuk Konfirmasi Barang Ditambahkan ke Keranjang -->
+                <div id="cartConfirmationModal" class="hidden fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-60">
+                    <div class="bg-white w-[90%] max-w-md p-5 rounded-lg shadow-lg text-center">
+                        <p class="text-xl font-semibold mb-4">Barang Ditambahkan ke Keranjang!</p>
+                        <button onclick="closeCartConfirmationModal()" class="bg-teal-500 text-white px-4 py-2 rounded hover:bg-teal-200 hover:text-teal-500">
+                            Tutup
+                        </button>
+                    </div>
+                </div>
+
 
                 <!-- Modal ke 2 -->
                 <div id="secondModal{{ $product->id_produk }}" class="hidden fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
@@ -233,111 +231,83 @@
                 const modal = document.getElementById('orderModal' + productId);
                 const quantityElement = document.getElementById('quantity' + productId);
                 const totalPriceElement = document.getElementById('modalTotalPrice' + productId);
-                const increaseButton = document.getElementById('increaseButton' + productId);
                 const buyNowButton = document.getElementById('buyNowButton' + productId);
-                const modalProductImage = document.getElementById('modalProductImage' + productId);
-                if (modalProductImage) {
-                    modalProductImage.src = productImage;
-                } else {
-                    console.error('Modal image element not found for product ID:', productId);
-                }
-                let currentTransactionId = null;
+
+                // Pastikan productPrice adalah angka
+                const formattedProductPrice = parseFloat(productPrice).toLocaleString();
 
                 // Set data produk ke modal
                 document.getElementById('modalProductImage' + productId).src = productImage;
                 document.getElementById('modalProductName' + productId).innerText = productName;
                 document.getElementById('modalProductStock' + productId).innerText = productStock;
-                document.getElementById('modalProductPrice' + productId).innerText = 'Harga per Unit: Rp' + productPrice;
+                document.getElementById('modalProductPrice' + productId).innerText = 'Harga per Unit: Rp' + formattedProductPrice;
+
+                // Atur kuantitas awal ke 1
                 quantityElement.innerText = 1;
-                totalPriceElement.innerText = 'Rp' + productPrice;
 
-                // Menyimpan ID produk ke elemen hidden input agar bisa diakses saat pemesanan
-                const hiddenProductIdElement = document.getElementById('productId' + productId);
-                hiddenProductIdElement.value = productId; // Mengatur nilai produk
+                // Hitung total harga awal
+                const initialTotalPrice = parseFloat(productPrice);
+                totalPriceElement.innerText = 'Rp' + initialTotalPrice.toLocaleString();
 
-                // Set URL beli
+                // Atur URL beli langsung untuk kuantitas awal
                 buyNowButton.setAttribute('href', buyUrl + '?quantity=1');
 
                 // Tampilkan modal
                 modal.classList.remove('hidden');
 
-                // Fungsi tombol + dan -
+                // Event listener untuk tombol + dan -
+                const increaseButton = document.getElementById('increaseButton' + productId);
+                const decreaseButton = document.getElementById('decreaseButton' + productId);
+
                 increaseButton.onclick = () => {
                     let quantity = parseInt(quantityElement.innerText);
                     if (quantity < productStock) {
                         quantity++;
                         quantityElement.innerText = quantity;
 
-                        // Hitung total harga
                         const totalPrice = quantity * parseFloat(productPrice);
                         totalPriceElement.innerText = 'Rp' + totalPrice.toLocaleString();
 
-                        // Update URL Beli Langsung
                         buyNowButton.setAttribute('href', buyUrl + '?quantity=' + quantity);
                     }
                 };
 
-                document.getElementById('decreaseButton' + productId).onclick = () => {
+                decreaseButton.onclick = () => {
                     let quantity = parseInt(quantityElement.innerText);
                     if (quantity > 1) {
                         quantity--;
                         quantityElement.innerText = quantity;
 
-                        // Hitung total harga
                         const totalPrice = quantity * parseFloat(productPrice);
                         totalPriceElement.innerText = 'Rp' + totalPrice.toLocaleString();
 
-                        // Update URL Beli Langsung
                         buyNowButton.setAttribute('href', buyUrl + '?quantity=' + quantity);
                     }
                 };
             }
 
-            function closeModal(productId, isCancel) {
-                console.log('closeModal triggered for productId:', productId);
-
+            function closeModal(productId, isCancel = false) {
                 const firstModal = document.getElementById('orderModal' + productId);
                 const secondModal = document.getElementById('secondModal' + productId);
+                const orderIdElement = document.getElementById('orderId' + productId);
 
                 if (!firstModal && !secondModal) {
                     console.error('Modals not found for productId:', productId);
                     return;
                 }
 
-                // Ambil ID pesanan dari elemen hidden di modal kedua
-                const orderIdElement = document.getElementById('orderId' + productId);
-                const orderId = orderIdElement ? orderIdElement.value : null;
-
-                if (isCancel && orderId) {
-                    console.log('Deleting order with ID:', orderId);
-                    deleteOrder(orderId)
-                        .then(() => {
-                            console.log('Order deleted successfully:', orderId);
-                        })
-                        .catch(error => {
-                            console.error('Failed to delete order:', error);
-                        });
-                } else {
-                    console.log('Not deleting order:', orderId);
+                // Reset atau hapus orderId jika diperlukan
+                if (isCancel && orderIdElement) {
+                    orderIdElement.value = ''; // Hapus nilai orderId
+                    console.log('Order ID reset:', orderIdElement.value);
                 }
 
-                // Close modals
-                firstModal.style.display = 'none';
-                secondModal.style.display = 'none';
+                // Sembunyikan modal pertama dan kedua
+                if (firstModal) firstModal.classList.add('hidden');
+                if (secondModal) secondModal.classList.add('hidden');
+
+                console.log('Modals closed and reset for productId:', productId);
             }
-            
-            // Tombol Cancel
-            document.getElementById('cancelButton' + productId).addEventListener('click', function() {
-                closeModal(productId, true);  // isCancel = true
-            });
-
-            // Tombol Bayar
-            document.getElementById('payButton' + productId).addEventListener('click', function() {
-                closeModal(productId, false);  // isCancel = false
-            });
-
-
-
 
             async function deleteOrder(orderId) {
                 try {
@@ -358,7 +328,6 @@
                     throw error;
                 }
             }
-
 
             function createTransaction(productId) {
                 const quantity = parseInt(document.getElementById('quantity' + productId).innerText);
@@ -419,69 +388,57 @@
                 })
             }
 
+            // Function to show the cart confirmation modal
+            function showCartConfirmationModal() {
+                const modal = document.getElementById('cartConfirmationModal');
+                modal.classList.remove('hidden'); // Menampilkan modal
+            }
+
+            // Function to close the cart confirmation modal
+            function closeCartConfirmationModal() {
+                const modal = document.getElementById('cartConfirmationModal');
+                modal.classList.add('hidden'); // Menyembunyikan modal
+            }
+
+            // Function to add product to cart and trigger modal flow
             function addToCart(product) {
-                const { id_produk, nama_produk, harga, gambar } = product;
-                console.log("Data Produk:", product);
+                const { id_produk, nama_produk, harga } = product;
+                const quantity = parseInt(document.getElementById('quantity' + id_produk)?.textContent || 0);
 
-                const quantity = parseInt(document.getElementById('quantity' + id_produk).textContent);
-
-                if (!id_produk || !nama_produk || !harga || !gambar || !quantity) {
-                    console.error("Produk tidak lengkap atau kuantitas tidak valid, tidak bisa ditambahkan ke keranjang");
+                if (!id_produk || !quantity) {
+                    console.error("Produk atau kuantitas tidak valid.");
                     return;
                 }
 
-                const cart = JSON.parse(localStorage.getItem('cart')) || [];
-
-                const existingProductIndex = cart.findIndex(item => item.id_produk === id_produk);
-
-                // Memastikan produk memiliki order_id yang valid sebelum melanjutkan
-                if (existingProductIndex !== -1 && !cart[existingProductIndex].id_pesanan) {
-                    console.error(`Order ID untuk produk ${id_produk} tidak valid!`);
-                    return;  // Menghentikan proses jika id_pesanan tidak ada
-                }
-
-                if (existingProductIndex !== -1) {
-                    cart[existingProductIndex].kuantitas += quantity;
-                } else {
-                    cart.push({
-                        id_produk,
-                        nama_produk,
-                        harga,
-                        gambar,
-                        kuantitas: quantity,
-                        id_pesanan: null, // Pastikan id_pesanan di set sebagai null saat produk baru ditambahkan
-                    });
-                }
-
-                // Setelah menambah atau memperbarui produk, simpan keranjang yang diperbarui di localStorage
-                localStorage.setItem('cart', JSON.stringify(cart));
-
-                // Kirim data ke server untuk mendapatkan order_id
-                fetch('/order/store', {
+                fetch('/cart/store', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
                     },
                     body: JSON.stringify({
-                        product_id: id_produk,
+                        id_produk,
                         kuantitas: quantity,
-                        total_pembayaran: harga * quantity
-                    })
+                        subtotal: harga * quantity,
+                    }),
                 })
                 .then(response => response.json())
                 .then(data => {
-                    if (data.order_id) {
-                        // Cari produk yang sesuai dengan id_produk dan update dengan order_id
-                        const productToUpdate = cart[existingProductIndex !== -1 ? existingProductIndex : cart.length - 1];
-                        productToUpdate.id_pesanan = data.order_id;
-
-                        // Simpan keranjang yang sudah diperbarui ke localStorage
-                        localStorage.setItem('cart', JSON.stringify(cart)); // Pastikan keranjang diperbarui
-                        console.log("Keranjang diperbarui dengan ID pesanan", cart);
+                    if (data.success) {
+                        console.log("Berhasil menambahkan ke keranjang:", data.cart);
+                    } else {
+                        console.error("Gagal menambahkan ke keranjang:", data.message);
                     }
                 })
-                .catch(error => console.error("Error saat menambah ID pesanan ke keranjang:", error));
+                .catch(error => console.error("Error:", error));
+            }
+
+            // Function to close the product modal (order modal)
+            function closeModal(productId) {
+                const modal = document.getElementById('orderModal' + productId);
+                if (modal) {
+                    modal.classList.add('hidden');  // Menyembunyikan modal pertama
+                }
             }
 
             function submitTransaction(productId) {

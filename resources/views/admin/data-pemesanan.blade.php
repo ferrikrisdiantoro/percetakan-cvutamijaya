@@ -51,7 +51,7 @@
             @foreach ($transactions as $transaction)
                 <tr>
                     <td class="border border-black p-2 text-center">{{ $transaction->id_transaksi }}</td>
-                    <td class="border border-black p-2 text-center">{{ $transaction->id_pelanggan }}</td>
+                    <td class="border border-black p-2 text-center">{{ $transaction->id_user }}</td>
                     <td class="border border-black p-2 text-center">
                         @foreach($transaction->detailTransactions as $detail)
                             <p>{{ $detail->order->id_produk }} </p>

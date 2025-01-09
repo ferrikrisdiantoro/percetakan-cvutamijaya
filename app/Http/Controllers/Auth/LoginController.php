@@ -17,7 +17,7 @@ class LoginController extends Controller
     // Proses login
     public function login(Request $request)
     {
-        $credentials = $request->only('nama', 'password');
+        $credentials = $request->only('username', 'password');
 
         if (Auth::attempt($credentials)) {
             // Cek apakah pengguna adalah admin atau bukan
@@ -27,7 +27,7 @@ class LoginController extends Controller
             }
 
             // Jika bukan admin, arahkan ke halaman pelanggan
-            return redirect()->route('product.index');  // Pastikan route customer.index sudah ada
+            return redirect()->route('pelanggan.home');  // Pastikan route customer.index sudah ada
         }
 
         return back()->withErrors(['login' => 'Invalid credentials'])->withInput();
@@ -40,7 +40,7 @@ class LoginController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('product.index'); // Arahkan ke halaman produk setelah logout
+        return redirect()->route('pelanggan.home'); // Arahkan ke halaman produk setelah logout
     }
 }
 

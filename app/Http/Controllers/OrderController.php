@@ -4,9 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use App\Models\Product;
-use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
 {
@@ -16,36 +16,47 @@ class OrderController extends Controller
             $validated = $request->validate([
                 'product_id' => 'required|exists:products,id_produk',
                 'kuantitas' => 'required|integer|min:1',
-                'total_pembayaran' => 'required|numeric',
+                'total_pembayaran' => 'required|numeric|min:1',
             ]);
     
             $product = Product::findOrFail($request->product_id);
+    
             if ($product->stok < $request->kuantitas) {
-                return response()->json(['message' => 'Stok tidak mencukupi'], 422);
+                return response()->json([
+                    'message' => 'Stok produk tidak mencukupi untuk pesanan ini.'
+                ], 422);
             }
+    
+            DB::beginTransaction();
     
             $order = new Order();
             $order->id_produk = $request->product_id;
-            $order->id_pelanggan = Auth::id();
+            $order->id_user = Auth::id();
             $order->kuantitas = $request->kuantitas;
             $order->total_pembayaran = $request->total_pembayaran;
     
-            if ($order->save()) {
-                $product->stok -= $request->kuantitas;
-                $product->save();
-                return response()->json(['order_id' => $order->id_pesanan], 201);
-            }
+            $order->save();
     
-            return response()->json(['message' => 'Gagal menyimpan pesanan'], 500);
+            $product->stok -= $request->kuantitas;
+            $product->save();
+    
+            DB::commit();
+    
+            return response()->json(['order_id' => $order->id_pesanan], 201);
         } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage()], 500);
+            DB::rollBack();
+            \Log::error('Error saat membuat pesanan:', ['error' => $e->getMessage()]);
+            return response()->json([
+                'message' => 'Terjadi kesalahan saat memproses pesanan. Silakan coba lagi.',
+            ], 500);
         }
     }
+    
     
     public function addToCart(Request $request)
     {
         $validated = $request->validate([
-            'product_id' => 'required|exists:products,id',
+            'product_id' => 'required|exists:products,id_produk',
             'kuantitas' => 'required|integer|min:1',
             'total_pembayaran' => 'required|numeric',
         ]);
@@ -88,26 +99,22 @@ class OrderController extends Controller
     public function multipledestroy(Request $request)
     {
         try {
-            // Log request untuk memeriksa data yang diterima
-            \Log::info('Received order_ids:', $request->input('order_ids'));
-    
             // Validasi input, pastikan order_ids ada dan berupa array
             $validated = $request->validate([
                 'order_ids' => 'required|array',
                 'order_ids.*' => 'exists:orders,id_pesanan'
             ]);
     
-            // Ambil semua pesanan yang memiliki id_pesanan yang sesuai
-            $orders = Order::whereIn('id_pesanan', $validated['order_ids'])->get();
+            // Ambil semua pesanan yang dimiliki oleh user dan sesuai dengan order_ids
+            $orders = Order::whereIn('id_pesanan', $validated['order_ids'])
+                ->where('id_user', Auth::id()) // Filter hanya pesanan milik user yang sedang login
+                ->get();
     
-            // Pastikan pesanan hanya dapat dihapus oleh pemiliknya
-            foreach ($orders as $order) {
-                if ($order->id_pelanggan !== Auth::id()) {
-                    return response()->json(['message' => 'Akses ditolak untuk pesanan dengan ID ' . $order->id_pesanan], 403);
-                }
+            if ($orders->isEmpty()) {
+                return response()->json(['message' => 'Pesanan tidak ditemukan atau tidak dimiliki oleh Anda'], 403);
             }
     
-            // Hapus pesanan dan update stok produk
+            // Hapus pesanan dan kembalikan stok produk
             foreach ($orders as $order) {
                 $product = Product::findOrFail($order->id_produk);
                 $product->stok += $order->kuantitas;
@@ -120,12 +127,6 @@ class OrderController extends Controller
             \Log::error('Error in multipledestroy:', ['error' => $e->getMessage()]);
             return response()->json(['message' => 'Terjadi kesalahan: ' . $e->getMessage()], 500);
         }
-    }
-    
-    
-
-
-
-    
+    } 
 }
 

@@ -24,6 +24,7 @@ class ProductController extends Controller
     {
         $request->validate([
             'nama_produk' => 'required',
+            'deskripsi' => 'required',
             'harga' => 'required|numeric',
             'bahan' => 'required',
             'ukuran' => 'required',
@@ -66,6 +67,7 @@ class ProductController extends Controller
         // Validasi data yang diterima dari form
         $validated = $request->validate([
             'nama_produk' => 'required|string|max:255',
+            'deskripsi' => 'required|string|max:255',
             'harga' => 'required|numeric',
             'bahan' => 'required|string',
             'ukuran' => 'required|string',
@@ -78,6 +80,7 @@ class ProductController extends Controller
 
         // Update data produk
         $product->nama_produk = $validated['nama_produk'];
+        $product->deskripsi = $validated['deskripsi'];
         $product->harga = $validated['harga'];
         $product->bahan = $validated['bahan'];
         $product->ukuran = $validated['ukuran'];
