@@ -46,9 +46,9 @@ class User extends Authenticatable
              // Ambil ID terakhir dari database
              $lastUser = self::orderBy('id_user', 'desc')->first();
              // Cek apakah ada user sebelumnya
-             $lastNumber = $lastUser ? (int)Str::after($lastUser->id_user, 'PLG') : 0;
+             $lastNumber = $lastUser ? (int)Str::after($lastUser->id_user, 'USR') : 0;
              // Generate ID baru dengan menambah satu pada nomor terakhir, lalu pad dengan 4 digit angka
-             $user->id_user = 'PLG' . str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
+             $user->id_user = 'USR' . str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
          });
      }
 

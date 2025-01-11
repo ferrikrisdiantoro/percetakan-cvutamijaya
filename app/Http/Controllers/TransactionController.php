@@ -36,15 +36,17 @@ class TransactionController extends Controller
                 'custom_image' => 'nullable|image|max:2048',
                 'proof_of_payment' => 'nullable|image|max:2048',
             ]);
-    
+
             $totalPembayaran = preg_replace('/[^0-9]/', '', $request->total_pembayaran);
-    
+
             // Menyimpan gambar dokumen tambahan jika ada
-            $customImagePath = $request->hasFile('custom_image') ? $request->file('custom_image')->store('images/dokumen_tambahan', 'public') : null;
+            $customImagePath = $request->hasFile('custom_image') ? 
+                $request->file('custom_image')->store('images/dokumen_tambahan', 'public') : null;
             
             // Menyimpan bukti pembayaran jika ada
-            $proofOfPaymentPath = $request->hasFile('proof_of_payment') ? $request->file('proof_of_payment')->store('images/bukti_pembayaran', 'public') : null;
-    
+            $proofOfPaymentPath = $request->hasFile('proof_of_payment') ? 
+                $request->file('proof_of_payment')->store('images/bukti_pembayaran', 'public') : null;
+
             // Ambil ID transaksi terakhir dan buat ID baru
             $lastOrder = Transaction::orderBy('id_transaksi', 'desc')->first();
             $lastNumber = $lastOrder ? (int)substr($lastOrder->id_transaksi, 2) : 0;
@@ -52,7 +54,7 @@ class TransactionController extends Controller
 
             // Membuat transaksi baru
             $transaction = new Transaction();
-            $transaction->id_transaksi = $transactionId;  // Gunakan ID yang sudah di-generate
+            $transaction->id_transaksi = $transactionId;
             $transaction->id_user = $userId;
             $transaction->id_pesanan = $request->order_id;
             $transaction->mode_pembayaran = $request->payment_method;
@@ -63,18 +65,35 @@ class TransactionController extends Controller
             $transaction->tanggal_transaksi = now();
             $transaction->save();
 
-            // Menyimpan data pada tabel DetailTransaction (transaction_orders)
+            // Menyimpan data pada tabel DetailTransaction
             $transactionOrder = new DetailTransaction();
-            $transactionOrder->id_transaksi = $transaction->id_transaksi;  // Menggunakan id_transaksi yang sudah ada
+            $transactionOrder->id_transaksi = $transaction->id_transaksi;
             $transactionOrder->id_pesanan = $request->order_id;
             $transactionOrder->dokumen_tambahan = $customImagePath;
             $transactionOrder->save();
-            
 
-            return response()->json(['message' => 'Transaksi berhasil'], 200);
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Transaksi berhasil',
+                    'redirect_url' => route('product.index')
+                ]);
+            }
+
+            return redirect()->route('product.index')->with('success', 'Pembayaran berhasil!');
+
         } catch (\Throwable $e) {
             Log::error('Error during transaction store: ', ['error' => $e->getMessage()]);
-            return response()->json(['error' => 'Terjadi kesalahan pada server'], 500);
+            
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Terjadi kesalahan pada server',
+                    'error' => $e->getMessage()
+                ], 500);
+            }
+            
+            return redirect()->back()->with('error', 'Terjadi kesalahan pada server');
         }
     }
     

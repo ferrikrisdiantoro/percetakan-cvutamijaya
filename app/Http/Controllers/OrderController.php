@@ -79,20 +79,40 @@ class OrderController extends Controller
     {
         try {
             $order = Order::findOrFail($id_pesanan);
-    
-            if ($order->id_pelanggan !== Auth::id()) {
-                return response()->json(['message' => 'Akses ditolak'], 403);
+
+            // Change id_pelanggan to id_user to match your database structure
+            if ($order->id_user !== Auth::id()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Anda tidak memiliki akses untuk menghapus pesanan ini'
+                ], 403);
             }
-    
-            $product = Product::findOrFail($order->id_produk);
-            $product->stok += $order->kuantitas;
-            $product->save();
-    
-            $order->delete();
-    
-            return response()->json(['message' => 'Pesanan berhasil dihapus'], 200);
+
+            DB::beginTransaction();
+            try {
+                // Return stock to product
+                $product = Product::findOrFail($order->id_produk);
+                $product->stok += $order->kuantitas;
+                $product->save();
+
+                // Delete the order
+                $order->delete();
+
+                DB::commit();
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Pesanan berhasil dihapus'
+                ], 200);
+            } catch (\Exception $e) {
+                DB::rollBack();
+                throw $e;
+            }
         } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage()], 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat menghapus pesanan: ' . $e->getMessage()
+            ], 500);
         }
     }
     

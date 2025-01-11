@@ -47,7 +47,7 @@
 
         <div class="mt-2 form-group">
             <label for="isi_misi" class="block text-sm text-white font-bold">Isi Misi</label>
-            <textarea name="isi_misi" id="isi_misi" class="p-3 mt-1 block w-full border-gray-300 text-gray-900 rounded-md shadow-sm form-control">{{ old('isi_misi', $profil->isi_misi) }}</textarea>
+            <textarea name="isi_misi" id="isi_misi" class="p-3 mt-1 block w-full border-gray-300 text-gray-900 rounded-md shadow-sm form-control" placeholder="Masukkan setiap poin misi di baris baru">{{ old('isi_misi', $profil->isi_misi) }}</textarea>
         </div>
 
         <div class="mt-2 form-group">
@@ -57,7 +57,7 @@
 
         <div class="mt-2 form-group">
             <label for="isi_kontak" class="block text-sm text-white font-bold">Isi Kontak</label>
-            <textarea name="isi_kontak" id="isi_kontak" class="p-3 mt-1 block w-full border-gray-300 text-gray-900 rounded-md shadow-sm form-control">{{ old('isi_kontak', $profil->isi_kontak) }}</textarea>
+            <textarea name="isi_kontak" id="isi_kontak" class="p-3 mt-1 block w-full border-gray-300 text-gray-900 rounded-md shadow-sm form-control" placeholder="Nomor Telepon&#10;Email">{{ old('isi_kontak', $profil->isi_kontak) }}</textarea>
         </div>
 
         <button type="submit" class="mt-4 px-4 py-2 bg-green-500 text-white rounded-lg">Simpan Perubahan</button>

@@ -7,12 +7,32 @@ use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // Ambil semua data user
-        $users = User::all();
+        $query = User::query();
+        $perPage = $request->input('entries', 10); // Default 10 entries per page
+        
+        // Role filter
+        if ($request->has('role_filter') && $request->role_filter != 'all') {
+            $query->where('role', $request->role_filter);
+        }
 
-        // Return view dengan data user
+        // Search functionality
+        if ($request->has('search')) {
+            $searchTerm = $request->search;
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('nama_lengkap', 'LIKE', "%{$searchTerm}%")
+                  ->orWhere('username', 'LIKE', "%{$searchTerm}%")
+                  ->orWhere('email', 'LIKE', "%{$searchTerm}%")
+                  ->orWhere('telepon', 'LIKE', "%{$searchTerm}%")
+                  ->orWhere('alamat', 'LIKE', "%{$searchTerm}%")
+                  ->orWhere('role', 'LIKE', "%{$searchTerm}%");
+            });
+        }
+
+        // Get paginated results
+        $users = $query->paginate($perPage)->withQueryString();
+
         return view('admin.user', compact('users'));
     }
 

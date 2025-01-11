@@ -272,6 +272,7 @@
                     });
 
                     totalAmountElement.innerText = totalAmount.toLocaleString('id-ID');
+                    setupQuantityListeners();
                 })
                 .catch(error => {
                     console.error('Error memuat keranjang:', error);
@@ -279,6 +280,70 @@
                 });
             };
 
+            const updateCartQuantity = (cartId, quantity) => {
+                fetch(`/cart/update/${cartId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        kuantitas: quantity
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        updateCartItems(); // Refresh tampilan keranjang
+                    } else {
+                        alert('Gagal mengupdate kuantitas: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Terjadi kesalahan saat mengupdate kuantitas');
+                });
+            };
+
+            // Update the quantity listeners setup
+            const setupQuantityListeners = () => {
+                // Event listener untuk tombol tambah
+                document.querySelectorAll('.increase-quantity').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const cartId = this.getAttribute('data-cart-id');
+                        const input = document.querySelector(`.quantity-input[data-cart-id="${cartId}"]`);
+                        const newQuantity = parseInt(input.value) + 1;
+                        updateCartQuantity(cartId, newQuantity);
+                    });
+                });
+
+                // Event listener untuk tombol kurang
+                document.querySelectorAll('.decrease-quantity').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const cartId = this.getAttribute('data-cart-id');
+                        const input = document.querySelector(`.quantity-input[data-cart-id="${cartId}"]`);
+                        const newQuantity = Math.max(1, parseInt(input.value) - 1); // Minimal 1
+                        updateCartQuantity(cartId, newQuantity);
+                    });
+                });
+
+                // Event listener untuk input langsung
+                document.querySelectorAll('.quantity-input').forEach(input => {
+                    input.addEventListener('change', function() {
+                        const cartId = this.getAttribute('data-cart-id');
+                        const newQuantity = Math.max(1, parseInt(this.value) || 1);
+                        this.value = newQuantity; // Update input value
+                        updateCartQuantity(cartId, newQuantity);
+                    });
+                });
+            };
+            
             const removeSelectedItems = () => {
                 const selectedCheckboxes = document.querySelectorAll('.cart-checkbox:checked');
                 const cartIdsToDelete = Array.from(selectedCheckboxes).map(checkbox => checkbox.getAttribute('data-cart-id'));
@@ -314,73 +379,106 @@
             document.getElementById('deleteSelected').addEventListener('click', removeSelectedItems);
 
             document.getElementById('checkoutButton').addEventListener('click', function() {
+                // Get selected items from cart
+                const selectedCheckboxes = document.querySelectorAll('.cart-checkbox:checked');
+                
+                if (selectedCheckboxes.length === 0) {
+                    alert('Pilih produk yang ingin dibayar!');
+                    return;
+                }
+
                 const cartSidebar = document.getElementById('cartSidebar');
                 const paymentModal = document.getElementById('paymentModal');
-
+                const modalProductCards = document.getElementById('modalProductCards');
+                
+                // Hide cart sidebar and show payment modal
                 cartSidebar.classList.add('hidden');
                 paymentModal.classList.remove('hidden');
                 
-                const modalProductCards = document.getElementById('modalProductCards');
                 modalProductCards.innerHTML = ''; // Clear previous content
-                const cart = JSON.parse(localStorage.getItem('cart')) || [];
                 
-                let totalHarga = 0;
-                cart.forEach(item => {
-                    const hargaProduk = item.harga * item.kuantitas;
-                    totalHarga += hargaProduk;
+                // Get cart items from server
+                fetch('/cart/user', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    }
+                })
+                .then(response => response.json())
+                .then(cartItems => {
+                    const selectedCartIds = Array.from(selectedCheckboxes).map(checkbox => 
+                        checkbox.getAttribute('data-cart-id')
+                    );
+                    
+                    let totalHarga = 0;
+                    
+                    // Filter only selected items and create their orders
+                    cartItems.forEach(item => {
+                        if (selectedCartIds.includes(item.id_cart.toString())) {
+                            const hargaProduk = item.product.harga * item.kuantitas;
+                            totalHarga += hargaProduk;
 
-                    const productCard = `
-                        <div class="bg-teal-600 text-white p-4 rounded-lg">
-                            <h2 class="text-lg font-bold">Pesanan: ${item.nama_produk}</h2>
-                            <div class="grid grid-cols-2 gap-4 mt-4">
-                                <input type="hidden" name="order_id" value="${item.id_pesanan}">
-                                <input type="hidden" name="product_id" value="${item.id_produk}">
-                                <div>
-                                    <img src="${item.gambar}" alt="Gambar Produk" class="w-32 h-32 object-cover rounded-lg">
-                                </div><br>
-                                <div>
-                                    <label class="block mb-2">Nama Lengkap</label>
-                                    <input type="text" name="nama_lengkap" value="{{ Auth::user()->nama_lengkap }}" class="w-full p-2 rounded bg-teal-900" disabled>
-                                </div>
-                                <div>
-                                    <label class="block mb-2">Alamat</label>
-                                    <input type="text" name="alamat" value="{{ Auth::user()->alamat }}" class="w-full p-2 bg-teal-900 rounded" disabled>
-                                </div>
-                                <div>
-                                    <label class="block mb-2">Nomor Telepon/WA</label>
-                                    <input type="text" name="telepon" value="{{ Auth::user()->telepon }}" class="w-full p-2 bg-teal-900 rounded" disabled>
-                                </div>
-                                <div>
-                                    <label class="block mb-2">Upload Custom Gambar</label>
-                                    <input type="file" name="custom_image" accept="image/*" class="w-full p-2 bg-teal-900 rounded">
-                                </div>
-                                <div>
-                                    <label class="block mb-2">Jumlah Produk</label>
-                                    <input type="number" name="quantity" value="${item.kuantitas}" class="w-full p-2 rounded bg-teal-900" disabled>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                    modalProductCards.innerHTML += productCard;
+                            // Create order for each selected item
+                            fetch('/order/store', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                                },
+                                body: JSON.stringify({
+                                    product_id: item.product.id_produk,
+                                    kuantitas: item.kuantitas,
+                                    total_pembayaran: hargaProduk
+                                })
+                            })
+                            .then(response => response.json())
+                            .then(data => console.log(data))
+                            .catch(error => console.error('Error creating order:', error));
 
-                    fetch('/order/store', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                        },
-                        body: JSON.stringify({
-                            product_id: item.id_produk,
-                            kuantitas: item.kuantitas,
-                            total_pembayaran: hargaProduk
-                        })
-                    })
-                    .then(response => response.json())
-                    .then(data => console.log(data))
-                    .catch(error => console.error('Error:', error));
+                            const productCard = `
+                                <div class="bg-teal-600 text-white p-4 rounded-lg">
+                                    <h2 class="text-lg font-bold">Pesanan: ${item.product.nama_produk}</h2>
+                                    <div class="grid grid-cols-2 gap-4 mt-4">
+                                        <input type="hidden" name="cart_id" value="${item.id_cart}">
+                                        <input type="hidden" name="product_id" value="${item.product.id_produk}">
+                                        <div>
+                                            <img src="${item.product.gambar}" alt="Gambar Produk" class="w-32 h-32 object-cover rounded-lg">
+                                        </div><br>
+                                        <div>
+                                            <label class="block mb-2">Nama Lengkap</label>
+                                            <input type="text" name="nama_lengkap" value="{{ Auth::user()->nama_lengkap }}" class="w-full p-2 rounded bg-teal-900" disabled>
+                                        </div>
+                                        <div>
+                                            <label class="block mb-2">Alamat</label>
+                                            <input type="text" name="alamat" value="{{ Auth::user()->alamat }}" class="w-full p-2 bg-teal-900 rounded" disabled>
+                                        </div>
+                                        <div>
+                                            <label class="block mb-2">Nomor Telepon/WA</label>
+                                            <input type="text" name="telepon" value="{{ Auth::user()->telepon }}" class="w-full p-2 bg-teal-900 rounded" disabled>
+                                        </div>
+                                        <div>
+                                            <label class="block mb-2">Upload Custom Gambar</label>
+                                            <input type="file" name="custom_image" accept="image/*" class="w-full p-2 bg-teal-900 rounded">
+                                        </div>
+                                        <div>
+                                            <label class="block mb-2">Jumlah Produk</label>
+                                            <input type="number" name="quantity" value="${item.kuantitas}" class="w-full p-2 rounded bg-teal-900" disabled>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                            modalProductCards.innerHTML += productCard;
+                        }
+                    });
+
+                    document.getElementById('totalHarga').innerText = totalHarga.toLocaleString('id-ID');
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Terjadi kesalahan saat memuat data produk');
                 });
-
-                document.getElementById('totalHarga').innerText = totalHarga.toLocaleString('id-ID');
             });
 
             document.getElementById('cancelButton').addEventListener('click', function() {
@@ -389,110 +487,124 @@
             });
 
             document.getElementById('payButton').addEventListener('click', async function() {
-            // 1. Get all checked items from cart
-            const selectedCheckboxes = document.querySelectorAll('.cart-checkbox:checked');
-            
-            if (selectedCheckboxes.length === 0) {
-                alert("Pilih item yang ingin dibayar!");
-                return;
-            }
-
-            // 2. Get and validate form data
-            const paymentMethod = document.querySelector("select[name='payment_method']").value;
-            const bankName = document.querySelector("select[name='bank_name']").value;
-            const proofOfPaymentInput = document.querySelector("input[name='proof_of_payment']");
-            const customImageInput = document.querySelector("input[name='custom_image']");
-
-            if (!paymentMethod || !bankName || !proofOfPaymentInput.files[0]) {
-                alert("Lengkapi semua informasi pembayaran!");
-                return;
-            }
-
-            try {
-                // 3. Get cart items data
-                const response = await fetch('/cart/user', {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    }
-                });
+                // 1. Get all checked items from cart
+                const selectedCheckboxes = document.querySelectorAll('.cart-checkbox:checked');
                 
-                const cartItems = await response.json();
-                const selectedCartIds = Array.from(selectedCheckboxes).map(cb => cb.getAttribute('data-cart-id'));
-                const selectedItems = cartItems.filter(item => selectedCartIds.includes(item.id_cart.toString()));
+                if (selectedCheckboxes.length === 0) {
+                    alert("Pilih item yang ingin dibayar!");
+                    return;
+                }
 
-                // 4. Create orders first
-                const orderPromises = selectedItems.map(item => 
-                    fetch('/order/store', {
-                        method: 'POST',
+                // 2. Get and validate form data
+                const paymentMethod = document.querySelector("select[name='payment_method']").value;
+                const bankName = document.querySelector("select[name='bank_name']").value;
+                const proofOfPaymentInput = document.querySelector("input[name='proof_of_payment']");
+                const customImageInput = document.querySelector("input[name='custom_image']");
+
+                if (!paymentMethod || !bankName || !proofOfPaymentInput.files[0]) {
+                    alert("Lengkapi semua informasi pembayaran!");
+                    return;
+                }
+
+                try {
+                    // 3. Get cart items data
+                    const response = await fetch('/cart/user', {
+                        method: 'GET',
                         headers: {
                             'Content-Type': 'application/json',
                             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                        },
-                        body: JSON.stringify({
-                            product_id: item.id_produk,
-                            kuantitas: item.kuantitas,
-                            total_pembayaran: item.product.harga * item.kuantitas
-                        })
-                    }).then(res => res.json())
-                );
+                        }
+                    });
+                    
+                    const cartItems = await response.json();
+                    const selectedCartIds = Array.from(selectedCheckboxes).map(cb => cb.getAttribute('data-cart-id'));
+                    const selectedItems = cartItems.filter(item => selectedCartIds.includes(item.id_cart.toString()));
 
-                const orders = await Promise.all(orderPromises);
+                    // 4. Create orders first
+                    const orderPromises = selectedItems.map(item => 
+                        fetch('/order/store', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                            },
+                            body: JSON.stringify({
+                                product_id: item.id_produk,
+                                kuantitas: item.kuantitas,
+                                total_pembayaran: item.product.harga * item.kuantitas
+                            })
+                        }).then(res => res.json())
+                    );
 
-                // 5. Prepare form data with files
-                const formData = new FormData();
-                formData.append("payment_method", paymentMethod);
-                formData.append("bank_name", bankName);
-                
-                // Add proof of payment file
-                if (proofOfPaymentInput.files[0]) {
-                    formData.append("proof_of_payment", proofOfPaymentInput.files[0]);
-                }
-                
-                // Add custom image if exists
-                if (customImageInput && customImageInput.files[0]) {
-                    formData.append("custom_image", customImageInput.files[0]);
-                }
+                    const orders = await Promise.all(orderPromises);
 
-                // 6. Add cart items with their order IDs
-                selectedItems.forEach((item, index) => {
-                    if (orders[index] && orders[index].order_id) {
-                        formData.append(`cart[${index}][user_id]`, item.id_user);
-                        formData.append(`cart[${index}][product_id]`, item.id_produk);
-                        formData.append(`cart[${index}][order_id]`, orders[index].order_id);
-                        formData.append(`cart[${index}][kuantitas]`, item.kuantitas);
-                        formData.append(`cart[${index}][total_harga]`, item.product.harga * item.kuantitas);
-                        formData.append(`cart[${index}][total_pembayaran]`, item.product.harga * item.kuantitas);
+                    // 5. Prepare form data with files
+                    const formData = new FormData();
+                    formData.append("payment_method", paymentMethod);
+                    formData.append("bank_name", bankName);
+                    
+                    // Add proof of payment file
+                    if (proofOfPaymentInput.files[0]) {
+                        formData.append("proof_of_payment", proofOfPaymentInput.files[0]);
                     }
-                });
+                    
+                    // Add custom image if exists
+                    if (customImageInput && customImageInput.files[0]) {
+                        formData.append("custom_image", customImageInput.files[0]);
+                    }
 
-                // 7. Send transaction request
-                const transactionResponse = await fetch("/transaction/cart", {
-                    method: "POST",
-                    headers: {
-                        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    },
-                    body: formData
-                });
+                    // 6. Add cart items with their order IDs
+                    selectedItems.forEach((item, index) => {
+                        if (orders[index] && orders[index].order_id) {
+                            formData.append(`cart[${index}][user_id]`, item.id_user);
+                            formData.append(`cart[${index}][product_id]`, item.id_produk);
+                            formData.append(`cart[${index}][order_id]`, orders[index].order_id);
+                            formData.append(`cart[${index}][kuantitas]`, item.kuantitas);
+                            formData.append(`cart[${index}][total_harga]`, item.product.harga * item.kuantitas);
+                            formData.append(`cart[${index}][total_pembayaran]`, item.product.harga * item.kuantitas);
+                        }
+                    });
 
-                const result = await transactionResponse.json();
+                    // 7. Send transaction request
+                    const transactionResponse = await fetch("/transaction/cart", {
+                        method: "POST",
+                        headers: {
+                            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        },
+                        body: formData
+                    });
 
-                if (result.success) {
-                    alert("Pembayaran berhasil!");
-                    updateCartItems();
-                    document.getElementById('paymentModal').classList.add("hidden");
-                    // Optional: Clear form
-                    proofOfPaymentInput.value = '';
-                    if (customImageInput) customImageInput.value = '';
-                } else {
-                    throw new Error(result.message || "Gagal melakukan pembayaran.");
+                    const result = await transactionResponse.json();
+
+                    if (result.success) {
+                        // 8. Delete paid items from cart
+                        const deletePromises = selectedCartIds.map(cartId =>
+                            fetch(`/cart/${cartId}`, {
+                                method: 'DELETE',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                                }
+                            })
+                        );
+
+                        await Promise.all(deletePromises);
+
+                        alert("Pembayaran berhasil!");
+                        updateCartItems(); // Refresh cart display
+                        document.getElementById('paymentModal').classList.add("hidden");
+                        
+                        // Clear form
+                        proofOfPaymentInput.value = '';
+                        if (customImageInput) customImageInput.value = '';
+                    } else {
+                        throw new Error(result.message || "Gagal melakukan pembayaran.");
+                    }
+                } catch (error) {
+                    console.error("Error:", error);
+                    alert(error.message || "Terjadi kesalahan saat memproses pembayaran.");
                 }
-            } catch (error) {
-                console.error("Error:", error);
-                alert(error.message || "Terjadi kesalahan saat memproses pembayaran.");
-            }
-        });
+            });
 
 
             document.getElementById('cartIcon').addEventListener('click', () => {

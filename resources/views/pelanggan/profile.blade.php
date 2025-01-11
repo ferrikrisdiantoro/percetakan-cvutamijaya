@@ -20,18 +20,20 @@
    <div class="flex justify-between mb-6">
       <div class="w-full md:w-1/2 pr-4">
          <h2 class="text-xl font-semibold mb-2 text-white">{{$profil->visi}}</h2>
-         <p class="text-sm text-white">{{$profil->isi_visi}}</p>
+         <p class="text-sm text-white">{!! nl2br($profil->isi_visi) !!}</p> <!-- Perbaikan di sini -->
       </div>
       <div class="w-full md:w-1/2 pl-4">
          <h2 class="text-xl font-semibold mb-2 text-white">{{$profil->misi}}</h2>
-         <p class="text-sm text-white">{{$profil->isi_misi}}</p>
+         <div class="text-sm text-white space-y-2">
+            {!! nl2br($profil->isi_misi) !!}
+         </div>
       </div>
    </div>
    <hr class="border-t border-gray-500 mb-4"/>
    <div class="flex justify-between items-center">
       <div>
          <h2 class="text-lg font-semibold mb-2 text-white">{{$profil->kontak}}</h2>
-         <p class="text-sm text-white">{{$profil->isi_kontak}}</p>
+         <p class="text-sm text-white">{!! nl2br($profil->isi_kontak) !!}</p>
       </div>
    </div>
 </div>

@@ -9,6 +9,8 @@ use App\Models\Order;
 use App\Models\Product;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+
 
 
 class CartController extends Controller
@@ -193,15 +195,39 @@ class CartController extends Controller
 
     public function update(Request $request, $cartId)
     {
-        $cartItem = Cart::find($cartId); // Pastikan Cart adalah model yang sesuai
-        if ($cartItem) {
-            $cartItem->kuantitas = $request->input('kuantitas');
-            $cartItem->save();
+        try {
+            $cart = Cart::findOrFail($cartId);
+            
+            // Validate the request
+            $validated = $request->validate([
+                'kuantitas' => 'required|integer|min:1'
+            ]);
 
-            return response()->json(['success' => true, 'message' => 'Kuantitas berhasil diperbarui']);
+            // Update the cart quantity
+            $cart->kuantitas = $validated['kuantitas'];
+            
+            // Recalculate subtotal
+            $cart->subtotal = $cart->kuantitas * $cart->product->harga;
+            
+            $cart->save();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Kuantitas berhasil diupdate',
+                'data' => $cart->load('product')
+            ]);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cart item tidak ditemukan'
+            ], 404);
+        } catch (\Exception $e) {
+            \Log::error('Error updating cart:', ['error' => $e->getMessage()]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengupdate kuantitas'
+            ], 500);
         }
-
-        return response()->json(['success' => false, 'message' => 'Item tidak ditemukan'], 404);
     }
 
 }

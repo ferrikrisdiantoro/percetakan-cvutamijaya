@@ -286,6 +286,7 @@
                 };
             }
 
+            // Enhanced closeModal function to handle order deletion
             function closeModal(productId, isCancel = false) {
                 const firstModal = document.getElementById('orderModal' + productId);
                 const secondModal = document.getElementById('secondModal' + productId);
@@ -296,33 +297,69 @@
                     return;
                 }
 
-                // Reset atau hapus orderId jika diperlukan
-                if (isCancel && orderIdElement) {
-                    orderIdElement.value = ''; // Hapus nilai orderId
-                    console.log('Order ID reset:', orderIdElement.value);
+                // If canceling from second modal, delete the order
+                if (isCancel && orderIdElement && orderIdElement.value) {
+                    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                    
+                    fetch(`/order/destroy/${orderIdElement.value}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        credentials: 'same-origin'
+                    })
+                    .then(async response => {
+                        const data = await response.json();
+                        
+                        if (!response.ok) {
+                            throw new Error(data.message || `HTTP error! status: ${response.status}`);
+                        }
+                        
+                        // Reset orderId and hide modals only on success
+                        orderIdElement.value = '';
+                        if (firstModal) firstModal.classList.add('hidden');
+                        if (secondModal) secondModal.classList.add('hidden');
+                        
+                        // Show success message
+                        alert(data.message || 'Pesanan berhasil dibatalkan');
+                    })
+                    .catch(error => {
+                        console.error('Error deleting order:', error);
+                        alert(error.message || 'Terjadi kesalahan saat membatalkan pesanan. Silakan coba lagi.');
+                    });
+                    
+                    return;
                 }
 
-                // Sembunyikan modal pertama dan kedua
+                // Hide modals if not canceling or if no order to delete
                 if (firstModal) firstModal.classList.add('hidden');
                 if (secondModal) secondModal.classList.add('hidden');
-
-                console.log('Modals closed and reset for productId:', productId);
             }
 
+            // Helper function for deleting orders
             async function deleteOrder(orderId) {
+                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                
                 try {
                     const response = await fetch(`/order/destroy/${orderId}`, {
                         method: 'DELETE',
                         headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                        }
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        credentials: 'same-origin'
                     });
 
+                    const data = await response.json();
+                    
                     if (!response.ok) {
-                        throw new Error('Gagal menghapus pesanan');
+                        throw new Error(data.message || 'Gagal menghapus pesanan');
                     }
 
-                    return response.json();
+                    return data;
                 } catch (error) {
                     console.error('Terjadi kesalahan saat menghapus pesanan:', error);
                     throw error;
@@ -425,27 +462,55 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
+                        // Close the order modal
+                        const orderModal = document.getElementById('orderModal' + id_produk);
+                        orderModal.classList.add('hidden');
+                        
+                        // Show the confirmation modal
+                        const confirmationModal = document.getElementById('cartConfirmationModal');
+                        confirmationModal.classList.remove('hidden');
+                        
                         console.log("Berhasil menambahkan ke keranjang:", data.cart);
                     } else {
                         console.error("Gagal menambahkan ke keranjang:", data.message);
+                        alert("Gagal menambahkan ke keranjang: " + data.message);
                     }
                 })
-                .catch(error => console.error("Error:", error));
-            }
-
-            // Function to close the product modal (order modal)
-            function closeModal(productId) {
-                const modal = document.getElementById('orderModal' + productId);
-                if (modal) {
-                    modal.classList.add('hidden');  // Menyembunyikan modal pertama
-                }
+                .catch(error => {
+                    console.error("Error:", error);
+                    alert("Terjadi kesalahan saat menambahkan ke keranjang");
+                });
             }
 
             function submitTransaction(productId) {
                 const form = document.getElementById('transactionForm' + productId);
                 const formData = new FormData(form);
 
-                // Ambil nilai order_id yang sudah diisi di modal kedua
+                // Client-side validation
+                const requiredFields = {
+                    'payment_method': 'Mode Pembayaran',
+                    'bank_name': 'Bank',
+                    'proof_of_payment': 'Bukti Pembayaran',
+                    'total_pembayaran': 'Total Pembayaran'
+                };
+
+                let isValid = true;
+                let errorMessage = 'Mohon lengkapi data berikut:\n';
+
+                for (const [field, label] of Object.entries(requiredFields)) {
+                    const value = formData.get(field);
+                    if (!value) {
+                        errorMessage += `- ${label}\n`;
+                        isValid = false;
+                    }
+                }
+
+                if (!isValid) {
+                    alert(errorMessage);
+                    return;
+                }
+
+                // Get order_id from the hidden input
                 const orderId = document.getElementById('orderId' + productId).value;
                 formData.append('order_id', orderId);
 
@@ -453,25 +518,36 @@
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json',  // Tambahkan header ini
                     },
                     body: formData
                 })
-                .then(response => {
-                    if (response.ok && response.headers.get('content-type').includes('application/json')) {
+                .then(async response => {
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.indexOf('application/json') !== -1) {
                         return response.json();
                     } else {
-                        return response.text().then(html => {
-                            throw new Error('Server returned error: ' + html);
-                        });
+                        // Jika bukan JSON, kemungkinan redirect HTML
+                        if (response.redirected) {
+                            window.location.href = response.url;
+                            return;
+                        }
+                        throw new Error('Unexpected response type');
                     }
                 })
                 .then(data => {
-                    alert(data.message || 'Transaksi berhasil!');
-                    closeModal(productId);
+                    if (data.success) {
+                        alert(data.message);
+                        if (data.redirect_url) {
+                            window.location.href = data.redirect_url;
+                        }
+                    } else {
+                        throw new Error(data.message || 'Terjadi kesalahan');
+                    }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('Terjadi kesalahan: ' + (error.message || 'Coba lagi nanti.'));
+                    alert('Terjadi kesalahan: ' + error.message);
                 });
             }
 

@@ -11,6 +11,10 @@
         <input type="text" name="nama_produk" id="nama_produk" value="{{ old('nama_produk', $product->nama_produk) }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required>
     </div>
     <div>
+        <label for="deskripsi" class="block text-sm font-medium text-gray-700">Deskripsi</label>
+        <input type="text" name="deskripsi" id="deskripsi" value="{{ old('deskripsi', $product->deskripsi) }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required>
+    </div>
+    <div>
         <label for="harga" class="block text-sm font-medium text-gray-700">Harga</label>
         <input type="number" step="0.01" name="harga" id="harga" value="{{ old('harga', $product->harga) }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required>
     </div>

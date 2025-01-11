@@ -10,6 +10,45 @@
         </div>
     @endif
 
+    <div class="mb-4 flex flex-col md:flex-row justify-between items-center gap-4">
+        <!-- Show entries and role filter container -->
+        <div class="flex items-center gap-4">
+            <!-- Show entries dropdown -->
+            <div class="flex items-center">
+                <label class="text-white mr-2">Show entries:</label>
+                <select id="entries" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 p-2.5">
+                    @foreach([10, 25, 50, 100] as $pageSize)
+                        <option value="{{ $pageSize }}" {{ request()->input('entries') == $pageSize ? 'selected' : '' }}>
+                            {{ $pageSize }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <!-- Role filter dropdown -->
+            <div class="flex items-center">
+                <label class="text-white mr-2">Filter Role:</label>
+                <select id="role_filter" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 p-2.5">
+                    <option value="all" {{ request()->input('role_filter') == 'all' ? 'selected' : '' }}>Semua Role</option>
+                    <option value="admin" {{ request()->input('role_filter') == 'admin' ? 'selected' : '' }}>Admin</option>
+                    <option value="pelanggan" {{ request()->input('role_filter') == 'pelanggan' ? 'selected' : '' }}>Pelanggan</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Search form -->
+        <form action="{{ route('manajemen-user') }}" method="GET" class="flex gap-2">
+            <input type="hidden" name="entries" value="{{ request()->input('entries', 10) }}">
+            <input type="hidden" name="role_filter" value="{{ request()->input('role_filter', 'all') }}">
+            <input type="text" name="search" value="{{ request()->input('search') }}" 
+                   class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 block p-2.5" 
+                   placeholder="Cari user...">
+            <button type="submit" class="text-white bg-teal-700 hover:bg-teal-800 focus:ring-4 focus:ring-teal-300 font-medium rounded-lg text-sm px-5 py-2.5">
+                Cari
+            </button>
+        </form>
+    </div>
+
     <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
         <table class="w-full text-sm text-left text-white">
             <thead class="text-xs text-white uppercase bg-teal-600">
@@ -53,5 +92,32 @@
             </tbody>
         </table>
     </div>
+    <!-- Pagination -->
+    <div class="mt-4">
+        {{ $users->links() }}
+    </div>
 </div>
+
+<script>
+        // Handle entries dropdown change
+        document.getElementById('entries').addEventListener('change', function() {
+            updateFilters();
+        });
+
+        // Handle role filter dropdown change
+        document.getElementById('role_filter').addEventListener('change', function() {
+            updateFilters();
+        });
+
+        function updateFilters() {
+            const currentUrl = new URL(window.location.href);
+            const entries = document.getElementById('entries').value;
+            const roleFilter = document.getElementById('role_filter').value;
+            
+            currentUrl.searchParams.set('entries', entries);
+            currentUrl.searchParams.set('role_filter', roleFilter);
+            
+            window.location.href = currentUrl.toString();
+        }
+    </script>
 @endsection
