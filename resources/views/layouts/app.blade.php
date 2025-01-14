@@ -144,8 +144,6 @@
                 </div>
             </div>
 
-            
-
             <!-- Container Modal -->
             <div id="paymentModal" class="hidden fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
                 <div class="bg-cyan-100 p-4 rounded-lg shadow-lg w-[80%] max-h-[90%] overflow-y-auto">
@@ -344,14 +342,26 @@
                 });
             };
             
+            // Modify the removeSelectedItems function to show confirmation modal first
             const removeSelectedItems = () => {
                 const selectedCheckboxes = document.querySelectorAll('.cart-checkbox:checked');
-                const cartIdsToDelete = Array.from(selectedCheckboxes).map(checkbox => checkbox.getAttribute('data-cart-id'));
-
-                if (cartIdsToDelete.length === 0) {
+                
+                if (selectedCheckboxes.length === 0) {
                     alert('Pilih item yang ingin dihapus!');
                     return;
                 }
+
+                // Show confirmation modal
+                const confirmationModal = document.getElementById('confirmationModal');
+                confirmationModal.classList.remove('hidden');
+            };
+
+            // Add event listeners for confirmation modal buttons
+            document.getElementById('confirmDeleteButton').addEventListener('click', function() {
+                const selectedCheckboxes = document.querySelectorAll('.cart-checkbox:checked');
+                const cartIdsToDelete = Array.from(selectedCheckboxes).map(checkbox => 
+                    checkbox.getAttribute('data-cart-id')
+                );
 
                 Promise.all(
                     cartIdsToDelete.map(cartId =>
@@ -371,11 +381,24 @@
                     } else {
                         alert('Item berhasil dihapus.');
                     }
+                    // Hide confirmation modal
+                    document.getElementById('confirmationModal').classList.add('hidden');
+                    // Update cart items display
                     updateCartItems();
                 })
-                .catch(error => console.error('Error menghapus item:', error));
-            };
+                .catch(error => {
+                    console.error('Error menghapus item:', error);
+                    alert('Terjadi kesalahan saat menghapus item');
+                    document.getElementById('confirmationModal').classList.add('hidden');
+                });
+            });
 
+            // Add event listener for cancel button
+            document.getElementById('cancelDeleteButton').addEventListener('click', function() {
+                document.getElementById('confirmationModal').classList.add('hidden');
+            });
+
+            // Update the delete button event listener
             document.getElementById('deleteSelected').addEventListener('click', removeSelectedItems);
 
             document.getElementById('checkoutButton').addEventListener('click', function() {
