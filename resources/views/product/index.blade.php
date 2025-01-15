@@ -67,10 +67,12 @@
                                     Edit
                                 </button>
                             </form>
-                            <form action="{{ route('product.destroy', $product->id_produk) }}" method="POST">
+                            <form action="{{ route('product.destroy', $product->id_produk) }}" method="POST" class="delete-form">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="focus:outline-none text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900">Hapus</button>
+                                <button type="submit" class="focus:outline-none text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900">
+                                    Hapus
+                                </button>
                             </form>
                         </td>
                     </tr>
@@ -79,6 +81,89 @@
             </table>
         </div>
     </div>
+
+    <!-- First, add this modal HTML after your table div -->
+    <div id="deleteConfirmationModal" class="fixed inset-0 bg-gray-800 bg-opacity-50 z-50 hidden flex items-center justify-center">
+        <div class="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
+            <h2 class="text-lg font-bold mb-4">Apakah Anda yakin ingin menghapus produk ini?</h2>
+            <div class="flex justify-center space-x-4">
+                <form id="deleteProductForm" method="POST">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-400">Ya</button>
+                </form>
+                <button id="cancelDeleteProduct" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-400">Tidak</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modify your delete button to use the confirmation -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+        const modal = document.getElementById('deleteConfirmationModal');
+        const deleteForm = document.getElementById('deleteProductForm');
+        const cancelButton = document.getElementById('cancelDeleteProduct');
+
+        // Find all delete buttons that are inside forms
+        const deleteForms = document.querySelectorAll('form[action*="/product/"][method="POST"]');
+        
+        deleteForms.forEach(form => {
+            const deleteButton = form.querySelector('button[type="submit"]');
+            if (deleteButton) {
+                // Prevent the default form submission
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    // Store the form's action URL in the modal's form
+                    deleteForm.action = form.action;
+                    
+                    // Show the modal
+                    modal.classList.remove('hidden');
+                });
+            }
+        });
+
+        // Handle cancel button click
+        cancelButton.addEventListener('click', function() {
+            modal.classList.add('hidden');
+        });
+
+        // Close modal when clicking outside
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                modal.classList.add('hidden');
+            }
+        });
+
+        // Handle the actual delete form submission
+        deleteForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Submit the form using fetch to handle the DELETE request
+            fetch(this.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
+                },
+                body: new FormData(this)
+            })
+            .then(response => {
+                if (response.ok) {
+                    window.location.reload(); // Reload the page after successful deletion
+                } else {
+                    throw new Error('Gagal menghapus produk');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan saat menghapus produk');
+            })
+            .finally(() => {
+                modal.classList.add('hidden');
+            });
+        });
+    });
+    </script>
     @elseif (Auth::user()->role === 'pelanggan')
         <div class="container mx-auto py-10">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
