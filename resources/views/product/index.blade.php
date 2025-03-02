@@ -60,14 +60,14 @@
                         <td class="px-6 py-4">Rp.{{ number_format($product->harga, 0) }}</td>
                         <td class="px-6 py-4">{{ $product->stok }}</td>
                         <td class="px-6 py-4 flex space-x-2">
-                            <form action="{{ route('product.edit', $product->id_produk) }}" method="GET" class="inline">
+                            <form action="{{ route('product.edit', $product->id) }}" method="GET" class="inline">
                                 <button 
                                     type="submit"
                                     class="focus:outline-none text-white bg-yellow-400 hover:bg-yellow-500 focus:ring-4 focus:ring-yellow-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:focus:ring-yellow-900">
                                     Edit
                                 </button>
                             </form>
-                            <form action="{{ route('product.destroy', $product->id_produk) }}" method="POST" class="delete-form">
+                            <form action="{{ route('product.destroy', $product->id) }}" method="POST" class="delete-form">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="focus:outline-none text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900">
@@ -165,14 +165,18 @@
     });
     </script>
     @elseif (Auth::user()->role === 'pelanggan')
-        <div class="container mx-auto py-10">
+        <div class="products-container mx-auto py-10">
+        @include('product.product-cards')
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 @forelse ($products as $product)
                 <!-- KARTU PRODUK-->
-                <div class="bg-teal-100 text-gray-900 p-6 rounded-lg shadow-lg">
-                    <img alt="{{ $product->nama_produk }}" 
-                    class="w-full h-48 object-cover mb-4" 
-                    src="{{ $product->gambar ? asset($product->gambar) : 'https://via.placeholder.com/300' }}" />
+                <!-- <div class="bg-teal-100 text-gray-900 p-6 rounded-lg shadow-lg">
+                    <img 
+                        class="w-full h-48 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity" 
+                        src="{{ $product->gambar }}" 
+                        alt="{{ $product->nama_produk }}"
+                        onclick="openImageModal('{{ $product->gambar }}')"
+                    >
                     <h2 class="text-xl font-bold mb-1">{{ $product->nama_produk }}</h2>
                     <p class="mb-1">{{ $product->deskripsi }}</p>
                     <p class="mb-1">Harga Rp{{ number_format($product->harga, 0, ',', '.') }}</p>
@@ -181,37 +185,51 @@
                     <p class="mb-4">Stok: {{ $product->stok }}</p>
                     <a href="javascript:void(0)" 
                     class="bg-teal-500 text-white py-2 px-4 rounded hover:bg-white hover:text-teal-600" 
-                    onclick="showOrderModal('{{ $product->id_produk }}', 
+                    onclick="showOrderModal('{{ $product->id }}', 
                                             '{{ $product->nama_produk }}', 
                                             '{{ $product->harga }}', 
                                             '{{ $product->gambar ?? 'https://via.placeholder.com/300' }}', 
                                             '{{ $product->stok }}')">
                         Pesan
                     </a>
+                </div> -->
+
+                <!-- Image Modal -->
+                <div id="imageModal" class="fixed inset-0 bg-gray-800 bg-opacity-50 z-50 hidden flex items-center justify-center">
+                    <div class="max-w-4xl w-full mx-4 bg-white rounded-lg shadow-lg overflow-hidden">
+                        <div class="relative">
+                            <img id="modalImage" src="" alt="Large preview" class="w-full h-auto max-h-[80vh] object-contain">
+                            <button onclick="closeImageModal()" class="absolute top-2 right-2 bg-gray-800 text-white rounded-full p-2 hover:bg-gray-700">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
                 </div>
                 
                 <!-- Modal pertama (Order Modal) -->
-                <div id="orderModal{{ $product->id_produk }}" class="hidden fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
+                <div id="orderModal{{ $product->id }}" class="hidden fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
                     <div class="bg-white w-[90%] max-w-md p-5 rounded-lg shadow-lg">
-                        <img id="modalProductImage{{ $product->id_produk }}" class="w-full h-48 object-cover rounded mb-4" src="" alt="Produk" />
-                        <h3 class="text-xl font-semibold mb-4" id="modalProductName{{ $product->id_produk }}">Nama Produk</h3>
-                        <p class="text-gray-700 mb-2" id="modalProductPrice{{ $product->id_produk }}">Harga per Unit: Rp0</p>
+                        <img id="modalProductImage{{ $product->id }}" class="w-full h-48 object-cover rounded mb-4" src="" alt="Produk" />
+                        <h3 class="text-xl font-semibold mb-4" id="modalProductName{{ $product->id }}">Nama Produk</h3>
+                        <p class="text-gray-700 mb-2" id="modalProductPrice{{ $product->id }}">Harga per Unit: Rp0</p>
                         <div class="flex items-center justify-between mb-4">
                             <span class="text-gray-700">Jumlah</span>
                             <div class="flex items-center space-x-2">
-                                <button class="px-2 py-1 bg-gray-300 rounded" id="decreaseButton{{ $product->id_produk }}">-</button>
-                                <span id="quantity{{ $product->id_produk }}" class="text-gray-700">1</span>
-                                <button class="px-2 py-1 bg-gray-300 rounded" id="increaseButton{{ $product->id_produk }}">+</button>
+                                <button class="px-2 py-1 bg-gray-300 rounded" id="decreaseButton{{ $product->id }}">-</button>
+                                <span id="quantity{{ $product->id }}" class="text-gray-700">1</span>
+                                <button class="px-2 py-1 bg-gray-300 rounded" id="increaseButton{{ $product->id }}">+</button>
                             </div>
-                            <input type="hidden" id="productId{{ $product->id_produk }}" value="{{ $product->id_produk}}">
+                            <input type="hidden" id="productId{{ $product->id }}" value="{{ $product->id}}">
                         </div>
-                        <p class="text-gray-700 mb-2">Total Harga: <span id="modalTotalPrice{{ $product->id_produk }}">Rp0</span></p>
-                        <p class="text-gray-700 mb-2">Stok Tersisa: <span id="modalProductStock{{ $product->id_produk }}">0</span></p>
+                        <p class="text-gray-700 mb-2">Total Harga: <span id="modalTotalPrice{{ $product->id }}">Rp0</span></p>
+                        <p class="text-gray-700 mb-2">Stok Tersisa: <span id="modalProductStock{{ $product->id }}">0</span></p>
                         <div class="flex justify-between space-x-2">
-                            <button type="button" id="buyNowButton{{ $product->id_produk }}" class="bg-green-500 text-white px-4 py-2 rounded flex-1 text-center hover:bg-green-200 hover:text-green-500" onclick="createTransaction('{{ $product->id_produk}}')">Beli Langsung</button>
-                            <button type="button" id="addToCartButton{{ $product->id_produk }}" class="bg-blue-500 text-white px-4 py-2 rounded flex-1 text-center hover:bg-blue-200 hover:text-blue-500" onclick="addToCart({{ json_encode($product) }})">Tambah ke Keranjang</button>
+                            <button type="button" id="buyNowButton{{ $product->id }}" class="bg-green-500 text-white px-4 py-2 rounded flex-1 text-center hover:bg-green-200 hover:text-green-500" onclick="createTransaction('{{ $product->id}}')">Beli Langsung</button>
+                            <button type="button" id="addToCartButton{{ $product->id }}" class="bg-blue-500 text-white px-4 py-2 rounded flex-1 text-center hover:bg-blue-200 hover:text-blue-500" onclick="addToCart({{ json_encode($product) }})">Tambah ke Keranjang</button>
                         </div>
-                        <button type="button" class="block mt-4 mx-auto bg-gray-800 text-gray-300 px-4 py-2 rounded hover:bg-gray-300 hover:text-gray-800" onclick="closeModal('{{ $product->id_produk }}')">Batal</button>
+                        <button type="button" class="block mt-4 mx-auto bg-gray-800 text-gray-300 px-4 py-2 rounded hover:bg-gray-300 hover:text-gray-800" onclick="closeModal('{{ $product->id }}')">Batal</button>
                     </div>
                 </div>
 
@@ -227,41 +245,33 @@
 
 
                 <!-- Modal ke 2 -->
-                <div id="secondModal{{ $product->id_produk }}" class="hidden fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
+                <div id="secondModal{{ $product->id }}" class="hidden fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
                     <div class="bg-cyan-100 p-4 rounded-lg shadow-lg w-[80%] mt-4 mb-4">
-                        <form id="transactionForm{{ $product->id_produk }}" enctype="multipart/form-data">
+                        <form id="transactionForm{{ $product->id }}" enctype="multipart/form-data">
                             @csrf
                             <div class="flex justify-between items-center">
                                 <h1 class="text-lg font-semibold">Pesanan: {{ $product->nama_produk }}</h1>
                             </div>
                             <div class="mt-4">
-                                <input type="hidden" id="orderId{{ $product->id_produk }}" name="order_id" value="{{ $product->id_pesanan}}">
-                                <input type="hidden" name="product_id" value="{{ $product->id_produk }}">
+                                <input type="hidden" id="orderId{{ $product->id }}" name="order_id" value="{{ optional($product->order)->id }}">
+                                <input type="hidden" name="product_id" value="{{ $product->id }}">
                                 <!-- Data User -->
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
                                         <label class="block mb-2">Nama Lengkap</label>
-                                        <input type="text" name="nama_lengkap" value="{{ Auth::user()->nama_lengkap }}" class="w-full p-2 border border-gray-300 rounded">
+                                        <input type="text" name="name" value="{{ Auth::user()->name }}" class="w-full p-2 border border-gray-300 rounded" readonly>
                                     </div>
                                     <div>
                                         <label class="block mb-2">Alamat</label>
-                                        <input type="text" name="alamat" value="{{ Auth::user()->alamat }}" class="w-full p-2 border border-gray-300 rounded">
+                                        <input type="text" name="alamat" value="{{ Auth::user()->alamat }}" class="w-full p-2 border border-gray-300 rounded" readonly>
                                     </div>
                                     <div>
                                         <label class="block mb-2">Nomor Telepon/WA</label>
-                                        <input type="text" name="telepon" value="{{ Auth::user()->telepon }}" class="w-full p-2 border border-gray-300 rounded">
-                                    </div>
-                                    <div>
-                                        <label for="payment_method" class="block font-medium mb-2">Mode Pembayaran</label>
-                                        <select name="payment_method" class="border border-gray-300 rounded-lg p-2 w-full">
-                                            <option value="">-- Pilih Jenis Pembayaran --</option>
-                                            <option value="dp">DP</option>
-                                            <option value="lunas">LUNAS</option>
-                                        </select>
+                                        <input type="text" name="telepon" value="{{ Auth::user()->telepon }}" class="w-full p-2 border border-gray-300 rounded" readonly>
                                     </div>
                                     <div>
                                         <label class="block mb-2">Jumlah Produk</label>
-                                        <input type="text" name="kuantitas" value="1" class="w-full p-2 border border-gray-300 rounded">
+                                        <input type="text" name="kuantitas" value="{{ optional($product->order)->kuantitas }}" class="w-full p-2 border border-gray-300 rounded" readonly>
                                     </div>
                                     <div>
                                         <label class="block mb-2">Upload Custom Gambar</label>
@@ -269,30 +279,13 @@
                                     </div>
                                     <div>
                                         <label class="block mb-2">Total Pembayaran</label>
-                                        <input type="number" name="total_pembayaran" value="{{ $product->harga }}" class="w-full p-2 border border-gray-300 rounded">
-                                    </div>
-                                </div>
-                                <hr class="border-black my-4">
-                                <div class="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label for="bank_name" class="block font-medium mb-2">Pilih Bank</label>
-                                        <select name="bank_name" class="border border-gray-300 rounded-lg p-2 w-full">
-                                            <option value="">-- Pilih Bank --</option>
-                                            <option value="BCA">BCA</option>
-                                            <option value="Mandiri">Mandiri</option>
-                                            <option value="BRI">BRI</option>
-                                            <option value="BNI">BNI</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label for="proof_of_payment" class="block font-medium mb-2">Unggah Bukti Pembayaran</label>
-                                        <input type="file" name="proof_of_payment" class="border border-gray-300 rounded-lg p-2 w-full">
+                                        <input type="text" name="total_pembayaran" value="{{ optional($product->order)->total_pembayaran }}" class="w-full p-2 border border-gray-300 rounded" readonly>
                                     </div>
                                 </div>
                                 <div class="flex justify-center mt-4 space-x-4">
-                                    <button type="button" class="bg-cyan-400 text-white px-4 py-2 rounded" onclick="submitTransaction('{{ $product->id_produk }}')">Bayar</button>
+                                    <button type="button" class="bg-cyan-400 text-white px-4 py-2 rounded" onclick="submitTransaction('{{ $product->id }}')">Bayar</button>
                                     <!-- Tombol Cancel -->
-                                    <button type="button" class="bg-red-400 text-white px-4 py-2 rounded" onclick="closeModal('{{ $product->id_produk }}', true)">Cancel</button>
+                                    <button type="button" class="bg-red-400 text-white px-4 py-2 rounded" onclick="closeModal('{{ $product->id }}', true)">Cancel</button>
                                 </div>
                                 @if(session('message'))
                                     <script>
@@ -305,6 +298,17 @@
                     </div>
                 </div>
 
+                <!-- Modal Konfirmasi Cancel -->
+                <div id="cancelConfirmationModal{{ $product->id }}" class="fixed inset-0 bg-gray-800 bg-opacity-50 z-50 hidden flex items-center justify-center">
+                    <div class="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
+                        <h2 class="text-lg font-bold mb-4">Apakah Anda yakin ingin membatalkan pesanan ini?</h2>
+                        <div class="flex justify-end space-x-4">
+                            <button onclick="confirmCancel('{{ $product->id }}')" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-400">Ya</button>
+                            <button onclick="closeCancelConfirmation('{{ $product->id }}')" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-400">Tidak</button>
+                        </div>
+                    </div>
+                </div>
+
                 @empty
                 <p class="text-center text-gray-500">Belum ada produk yang tersedia.</p>
                 @endforelse
@@ -312,6 +316,39 @@
         </div>
 
         <script>
+            function openImageModal(imageUrl) {
+                const modal = document.getElementById('imageModal');
+                const modalImage = document.getElementById('modalImage');
+                
+                modalImage.src = imageUrl;
+                modal.classList.remove('hidden');
+                
+                // Prevent scrolling on the background
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeImageModal() {
+                const modal = document.getElementById('imageModal');
+                modal.classList.add('hidden');
+                
+                // Re-enable scrolling
+                document.body.style.overflow = 'auto';
+            }
+
+            // Close modal when clicking outside the image
+            document.getElementById('imageModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeImageModal();
+                }
+            });
+
+            // Add keyboard support to close modal with Escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && !document.getElementById('imageModal').classList.contains('hidden')) {
+                    closeImageModal();
+                }
+            });
+
             function showOrderModal(productId, productName, productPrice, productImage, productStock, buyUrl) {
                 const modal = document.getElementById('orderModal' + productId);
                 const quantityElement = document.getElementById('quantity' + productId);
@@ -372,18 +409,27 @@
             }
 
             // Enhanced closeModal function to handle order deletion
+            // Modify the existing closeModal function
             function closeModal(productId, isCancel = false) {
-                const firstModal = document.getElementById('orderModal' + productId);
-                const secondModal = document.getElementById('secondModal' + productId);
-                const orderIdElement = document.getElementById('orderId' + productId);
-
-                if (!firstModal && !secondModal) {
-                    console.error('Modals not found for productId:', productId);
+                if (isCancel) {
+                    // Show confirmation modal instead of directly canceling
+                    const confirmationModal = document.getElementById('cancelConfirmationModal' + productId);
+                    confirmationModal.classList.remove('hidden');
                     return;
                 }
 
-                // If canceling from second modal, delete the order
-                if (isCancel && orderIdElement && orderIdElement.value) {
+                const firstModal = document.getElementById('orderModal' + productId);
+                const secondModal = document.getElementById('secondModal' + productId);
+                
+                if (firstModal) firstModal.classList.add('hidden');
+                if (secondModal) secondModal.classList.add('hidden');
+            }
+
+            // Add new function to handle cancel confirmation
+            function confirmCancel(productId) {
+                const orderIdElement = document.getElementById('orderId' + productId);
+                
+                if (orderIdElement && orderIdElement.value) {
                     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
                     
                     fetch(`/order/destroy/${orderIdElement.value}`, {
@@ -402,10 +448,15 @@
                             throw new Error(data.message || `HTTP error! status: ${response.status}`);
                         }
                         
-                        // Reset orderId and hide modals only on success
+                        // Reset orderId and hide all modals
                         orderIdElement.value = '';
+                        const firstModal = document.getElementById('orderModal' + productId);
+                        const secondModal = document.getElementById('secondModal' + productId);
+                        const confirmationModal = document.getElementById('cancelConfirmationModal' + productId);
+                        
                         if (firstModal) firstModal.classList.add('hidden');
                         if (secondModal) secondModal.classList.add('hidden');
+                        if (confirmationModal) confirmationModal.classList.add('hidden');
                         
                         // Show success message
                         alert(data.message || 'Pesanan berhasil dibatalkan');
@@ -414,13 +465,15 @@
                         console.error('Error deleting order:', error);
                         alert(error.message || 'Terjadi kesalahan saat membatalkan pesanan. Silakan coba lagi.');
                     });
-                    
-                    return;
                 }
+            }
 
-                // Hide modals if not canceling or if no order to delete
-                if (firstModal) firstModal.classList.add('hidden');
-                if (secondModal) secondModal.classList.add('hidden');
+            // Add function to close cancel confirmation modal
+            function closeCancelConfirmation(productId) {
+                const confirmationModal = document.getElementById('cancelConfirmationModal' + productId);
+                if (confirmationModal) {
+                    confirmationModal.classList.add('hidden');
+                }
             }
 
             // Helper function for deleting orders
@@ -456,22 +509,13 @@
                 const totalPrice = parseFloat(document.getElementById('modalTotalPrice' + productId).innerText.replace(/[^\d]/g, ''));
                 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
                 
-                // Ambil ID produk dari elemen input tersembunyi
-                console.log('Product ID Element Value:', document.getElementById('productId' + productId).value);
                 const productIdValue = document.getElementById('productId' + productId).value;
 
-                console.log({
-                    product_id: productIdValue || 'NULL', // Debug jika ID kosong
-                    kuantitas: quantity,
-                    total_pembayaran: totalPrice
-                });
-
-                // Kirim data ke server menggunakan fetch
                 fetch('/order/store', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        'X-CSRF-TOKEN': csrfToken
                     },
                     body: JSON.stringify({
                         product_id: productIdValue,
@@ -480,35 +524,37 @@
                     })
                 })
                 .then(response => {
-                    console.log('Raw response:', response); // Debug respons mentah
                     if (!response.ok) {
-                        return response.text().then(text => {
-                            throw new Error(text || 'Terjadi kesalahan');
-                        });
+                        return response.text().then(text => { throw new Error(text || 'Terjadi kesalahan'); });
                     }
                     return response.json();
                 })
                 .then(data => {
-                    console.log('Data from server:', data);
                     if (data.order_id) {
                         document.getElementById('orderId' + productId).value = data.order_id;
-                        console.log('Order ID saved in form:', data.order_id);
-                    } else {
-                        console.error('Element with ID orderId' + productId + ' not found.');
+                        
+                        // Update total pembayaran di modal kedua
+                        const totalPembayaranInput = document.querySelector('#secondModal' + productId + ' input[name="total_pembayaran"]');
+                        if(totalPembayaranInput) {
+                            totalPembayaranInput.value = totalPrice; // totalPrice dihitung dari kuantitas * harga
+                        }
                     }
-
+                    // Sembunyikan modal pertama dan tampilkan modal kedua
                     const firstModal = document.getElementById('orderModal' + productId);
                     if (firstModal) {
-                        firstModal.classList.add('hidden');  // Menyembunyikan modal pertama
+                        firstModal.classList.add('hidden');
                     }
-
-                    // Buka modal kedua setelah order_id diatur
                     const secondModal = document.getElementById('secondModal' + productId);
                     if (secondModal) {
                         secondModal.classList.remove('hidden');
                     }
                 })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Terjadi kesalahan: ' + (error.message || 'Unknown error'));
+                });
             }
+
 
             // Function to show the cart confirmation modal
             function showCartConfirmationModal() {
@@ -524,10 +570,10 @@
 
             // Function to add product to cart and trigger modal flow
             function addToCart(product) {
-                const { id_produk, nama_produk, harga } = product;
-                const quantity = parseInt(document.getElementById('quantity' + id_produk)?.textContent || 0);
+                const { id, nama_produk, harga } = product;
+                const quantity = parseInt(document.getElementById('quantity' + id)?.textContent || 0);
 
-                if (!id_produk || !quantity) {
+                if (!id || !quantity) {
                     console.error("Produk atau kuantitas tidak valid.");
                     return;
                 }
@@ -539,7 +585,7 @@
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
                     },
                     body: JSON.stringify({
-                        id_produk,
+                        id_produk: id,
                         kuantitas: quantity,
                         subtotal: harga * quantity,
                     }),
@@ -548,7 +594,7 @@
                 .then(data => {
                     if (data.success) {
                         // Close the order modal
-                        const orderModal = document.getElementById('orderModal' + id_produk);
+                        const orderModal = document.getElementById('orderModal' + id);
                         orderModal.classList.add('hidden');
                         
                         // Show the confirmation modal
@@ -571,11 +617,57 @@
                 const form = document.getElementById('transactionForm' + productId);
                 const formData = new FormData(form);
 
-                // Client-side validation
+                // Validasi
+                if (!validateForm(formData)) {
+                    return;
+                }
+
+                // Tambahkan order_id ke formData
+                const orderId = document.getElementById('orderId' + productId).value;
+                formData.append('order_id', orderId);
+
+                // Kirim request
+                fetch('/transaction/store', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => Promise.reject(err));
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success && data.snap_token) {
+                        window.snap.pay(data.snap_token, {
+                            onSuccess: function(result) {
+                                handlePaymentSuccess(result, data.transaction_id);
+                            },
+                            onPending: function(result) {
+                                handlePaymentPending(result, data.transaction_id);
+                            },
+                            onError: function(result) {
+                                handlePaymentError(result);
+                            },
+                            onClose: function() {
+                                handlePaymentClose();
+                            }
+                        });
+                    } else {
+                        throw new Error(data.message || 'Terjadi kesalahan');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Terjadi kesalahan: ' + (error.message || 'Unknown error'));
+                });
+            }
+
+            function validateForm(formData) {
                 const requiredFields = {
-                    'payment_method': 'Mode Pembayaran',
-                    'bank_name': 'Bank',
-                    'proof_of_payment': 'Bukti Pembayaran',
                     'total_pembayaran': 'Total Pembayaran'
                 };
 
@@ -583,8 +675,7 @@
                 let errorMessage = 'Mohon lengkapi data berikut:\n';
 
                 for (const [field, label] of Object.entries(requiredFields)) {
-                    const value = formData.get(field);
-                    if (!value) {
+                    if (!formData.get(field)) {
                         errorMessage += `- ${label}\n`;
                         isValid = false;
                     }
@@ -592,48 +683,28 @@
 
                 if (!isValid) {
                     alert(errorMessage);
-                    return;
                 }
 
-                // Get order_id from the hidden input
-                const orderId = document.getElementById('orderId' + productId).value;
-                formData.append('order_id', orderId);
+                return isValid;
+            }
 
-                fetch('/transaction/store', {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                        'Accept': 'application/json',  // Tambahkan header ini
-                    },
-                    body: formData
-                })
-                .then(async response => {
-                    const contentType = response.headers.get('content-type');
-                    if (contentType && contentType.indexOf('application/json') !== -1) {
-                        return response.json();
-                    } else {
-                        // Jika bukan JSON, kemungkinan redirect HTML
-                        if (response.redirected) {
-                            window.location.href = response.url;
-                            return;
-                        }
-                        throw new Error('Unexpected response type');
-                    }
-                })
-                .then(data => {
-                    if (data.success) {
-                        alert(data.message);
-                        if (data.redirect_url) {
-                            window.location.href = data.redirect_url;
-                        }
-                    } else {
-                        throw new Error(data.message || 'Terjadi kesalahan');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Terjadi kesalahan: ' + error.message);
-                });
+            function handlePaymentSuccess(result, transactionId) {
+                console.log('success', result);
+                window.location.href = `/product`;
+            }
+
+            function handlePaymentPending(result, transactionId) {
+                console.log('pending', result);
+                window.location.href = `/payment/pending?order_id=${transactionId}`;
+            }
+
+            function handlePaymentError(result) {
+                console.log('error', result);
+                alert('Pembayaran gagal!');
+            }
+
+            function handlePaymentClose() {
+                alert('Anda menutup popup tanpa menyelesaikan pembayaran');
             }
 
 
@@ -643,4 +714,10 @@
     </div>
     @endif    
 @endguest
+@endsection
+@section("scripts")
+    <script 
+        src="https://app.sandbox.midtrans.com/snap/snap.js"
+        data-client-key="{{ config('midtrans.client_key') }}">
+    </script>
 @endsection

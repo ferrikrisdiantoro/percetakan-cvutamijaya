@@ -11,7 +11,7 @@ class ProfilPerusahaan extends Model
 
     protected $table = 'profil_perusahaan'; // Menentukan nama tabel jika berbeda dengan nama model
 
-    protected $primaryKey = 'id_profil_perusahaan';
+    protected $primaryKey = 'id';
 
     protected $fillable = [
         'logo',

@@ -42,15 +42,13 @@
                     <th class="border border-black p-2">Quantity</th>
                     <th class="border border-black p-2">Total Pembayaran</th>
                     <th class="border border-black p-2">Status Pemesanan</th>
-                    <th class="border border-black p-2">Mode Pembayaran</th>
                     <th class="border border-black p-2">Dokumen Tambahan</th>
-                    <th class="border border-black p-2">Bukti Pembayaran</th>
                 </tr>
             </thead>
             <tbody>
             @foreach ($transactions as $transaction)
                 <tr>
-                    <td class="border border-black p-2 text-center">{{ $transaction->id_transaksi }}</td>
+                    <td class="border border-black p-2 text-center">{{ $transaction->id }}</td>
                     <td class="border border-black p-2 text-center">{{ $transaction->id_user }}</td>
                     <td class="border border-black p-2 text-center">
                         @foreach($transaction->detailTransactions as $detail)
@@ -70,12 +68,6 @@
                             <option value="completed" {{ $transaction->status === 'completed' ? 'selected' : '' }}>Selesai</option>
                         </select>
                     </td>
-                    <td class="border border-black p-2">
-                        <select name="mode_pembayaran[{{ $transaction->id_transaksi }}]" class="w-full p-2 border border-black rounded-lg">
-                            <option value="dp" {{ $transaction->mode_pembayaran === 'dp' ? 'selected' : '' }}>DP</option>
-                            <option value="lunas" {{ $transaction->mode_pembayaran === 'lunas' ? 'selected' : '' }}>Lunas</option>
-                        </select>
-                    </td>
                     <td class="border border-black p-2 ">
                         <div class="flex flex-col items-start gap-2">
                             @foreach($transaction->detailTransactions as $detail)
@@ -89,20 +81,6 @@
                                     <p class="text-gray-500">Tidak ada dokumen</p>
                                 @endif
                             @endforeach
-                        </div>
-                    </td>
-
-                    <td class="border border-black p-2">
-                        <div class="flex flex-col gap-2 mt-2">
-                            @if($transaction->bukti_pembayaran)
-                                <a href="{{ Storage::url($transaction->bukti_pembayaran) }}" 
-                                target="_blank" 
-                                class="rounded-md bg-teal-600 py-2 px-4 border border-transparent text-center text-sm text-white transition-all shadow-md hover:shadow-lg focus:bg-teal-700 focus:shadow-none active:bg-teal-700 hover:bg-teal-700 active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none">
-                                Lihat Bukti
-                                </a>
-                            @else
-                                <p>Tidak ada bukti</p>
-                            @endif
                         </div>
                     </td>
                 </tr>

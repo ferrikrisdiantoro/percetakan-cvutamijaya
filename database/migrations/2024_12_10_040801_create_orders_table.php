@@ -12,14 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('orders', function (Blueprint $table) {
-            $table->string('id_pesanan')->primary(); // ID Pesanan (Primary Key)
+            $table->string('id')->primary(); // ID Pesanan (Primary Key)
             $table->string('id_produk');
             $table->string('id_user');
             $table->integer('kuantitas');  // Jumlah produk yang dibeli
             $table->decimal('total_pembayaran', 15, 2); // Total pembayaran
             $table->timestamps(); // Kolom created_at dan updated_at
-            $table->foreign('id_produk')->references('id_produk')->on('products')->onDelete('cascade');
-            $table->foreign('id_user')->references('id_user')->on('users')->onDelete('cascade');
+            $table->foreign('id_produk')->references('id')->on('products')->onDelete('cascade');
+            $table->foreign('id_user')->references('id')->on('users')->onDelete('cascade');
         });
         
     }

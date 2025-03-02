@@ -5,8 +5,8 @@
 <div class="bg-teal-600 p-8 mt-4 rounded-lg shadow-lg w-full mb-4">
     <h1 class="text-2xl font-bold mb-6 text-white">Profil Saya</h1>
         <div class="mt-2">
-            <label for="nama_lengkap " class="block text-sm text-white font-bold">Nama Lengkap</label>
-            <input type="text" name="nama_lengkap " id="nama_lengkap " class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" value="{{ basename (Auth::user()->nama_lengkap) }}" readonly>
+            <label for="name " class="block text-sm text-white font-bold">Nama Lengkap</label>
+            <input type="text" name="name " id="name" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" value="{{ basename (Auth::user()->name) }}" readonly>
         </div>
         <div class="mt-2">
             <label for="username " class="block text-sm text-white font-bold">Username</label>

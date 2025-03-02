@@ -15,7 +15,12 @@ class CompanyProfileController extends Controller
 
     public function edit()
     {
-        $profil = ProfilPerusahaan::first();
+        $profil = ProfilPerusahaan::first(); // Mengambil data profil pertama
+    
+        if (!$profil) {
+            // Jika belum ada data, buat data kosong
+            $profil = new ProfilPerusahaan();
+        }
         return view('admin.edit-profil-perusahaan', compact('profil'));
     }
 
@@ -32,9 +37,10 @@ class CompanyProfileController extends Controller
             'kontak' => 'nullable|string',
             'isi_kontak' => 'nullable|string',
         ]);
-
-        $profil = ProfilPerusahaan::first();
-
+    
+        // Cari atau buat profil baru
+        $profil = ProfilPerusahaan::firstOrNew();
+    
         // Handle logo
         if ($request->hasFile('logo')) {
             $file = $request->file('logo');
@@ -42,16 +48,33 @@ class CompanyProfileController extends Controller
             $profil->logo = 'storage/' . $path;
         }
     
-        // Format misi dan kontak sebelum update
-        $data = $request->except(['logo']);
-        if (isset($data['isi_misi'])) {
-            $data['isi_misi'] = $this->formatMisi($data['isi_misi']);
+        // Ambil hanya field yang diizinkan
+        $fillableData = $request->only([
+            'judul_p1',
+            'isi_p1',
+            'visi',
+            'isi_visi',
+            'misi',
+            'isi_misi',
+            'kontak',
+            'isi_kontak'
+        ]);
+    
+        // Format misi dan kontak jika ada
+        if (isset($fillableData['isi_misi'])) {
+            $fillableData['isi_misi'] = $this->formatMisi($fillableData['isi_misi']);
         }
-        if (isset($data['isi_kontak'])) {
-            $data['isi_kontak'] = $this->formatKontak($data['isi_kontak']);
+        if (isset($fillableData['isi_kontak'])) {
+            $fillableData['isi_kontak'] = $this->formatKontak($fillableData['isi_kontak']);
         }
     
-        $profil->update($data);
+        // Update data
+        foreach ($fillableData as $key => $value) {
+            $profil->$key = $value;
+        }
+        
+        // Simpan perubahan
+        $profil->save();
     
         return redirect()->route('profil-perusahaan-edit')
             ->with('success', 'Profil Perusahaan berhasil diperbarui!');

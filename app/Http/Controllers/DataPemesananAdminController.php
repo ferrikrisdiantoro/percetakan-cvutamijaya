@@ -3,26 +3,25 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Transaction; // Pastikan Anda sudah memiliki model Transaction
+use App\Models\Transaction;
 
 class DataPemesananAdminController extends Controller
 {
     public function index(Request $request)
     {
-        // Mengambil data transaksi
-        $transactions = Transaction::all(); // Jika ada relasi product/customer
-        $perPage = $request->input('perPage', 10); // Default show 10 entries
+        $perPage = $request->input('perPage', 10);
         $search = $request->input('search');
     
-        $transactions = Transaction::with(['product', 'order'])
+        $transactions = Transaction::with(['detailTransactions.order', 'user'])
             ->when($search, function ($query, $search) {
                 return $query->where('id_transaksi', 'like', "%$search%")
-                             ->orWhere('id_pelanggan', 'like', "%$search%")
-                             ->orWhereHas('product', function ($q) use ($search) {
-                                 $q->where('id_produk', 'like', "%$search%");
-                             });
+                            ->orWhere('id_user', 'like', "%$search%")
+                            ->orWhereHas('detailTransactions.order', function ($q) use ($search) {
+                                $q->where('id', 'like', "%$search%");
+                            });
             })
             ->paginate($perPage);
-        return view('admin.data-pemesanan', compact('transactions')); // Kirim data ke view
+
+        return view('admin.data-pemesanan', compact('transactions'));
     }
 }

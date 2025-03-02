@@ -13,7 +13,7 @@
     <div class="bg-teal-200 p-4 rounded-lg shadow-lg w-full mt-4 mb-4 hover:bg-teal-300">
         <div class="flex justify-between items-center">
             <div class="flex-1 cursor-pointer" onclick="toggleDetails('{{ $order->id_transaksi }}')">
-                <h1 class="text-lg font-semibold">Pesanan: {{ $order->id_transaksi }}</h1>
+                <h1 class="text-lg font-semibold">Pesanan: {{ $order->id }}</h1>
                 <span class="text-sm">Klik untuk melihat detail</span>
             </div>
         </div>
@@ -22,7 +22,7 @@
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label class="block mb-2">Nama Lengkap</label>
-                    <input type="text" name="nama_lengkap" value="{{ basename (Auth::user()->nama_lengkap) }}" class="w-full p-2 border border-gray-300 rounded" readonly>
+                    <input type="text" name="name" value="{{ basename (Auth::user()->name) }}" class="w-full p-2 border border-gray-300 rounded" readonly>
                 </div>
                 <div>
                     <label class="block mb-2">Alamat</label>
@@ -33,24 +33,8 @@
                     <input type="text" name="telepon" value="{{ basename (Auth::user()->telepon) }}" class="w-full p-2 border border-gray-300 rounded" readonly>
                 </div>
                 <div>
-                    <label for="payment_method" class="block font-medium mb-2">Mode Pembayaran</label>
-                    <input value="{{basename($order->mode_pembayaran) }}" class="w-full p-2 border border-gray-300 rounded" readonly>
-                </div>
-                <div>
                     <label class="block mb-2">Total Pembayaran</label>
                     <input value="{{basename($order->total_pembayaran) }}" class="w-full p-2 border border-gray-300 rounded" readonly>
-                </div>
-                <div>
-                    <label for="bank_name" class="block font-medium mb-2">Pilih Bank</label>
-                    <input value="{{basename($order->transfer) }}" class="w-full p-2 border border-gray-300 rounded" readonly>
-                </div>
-                <div>
-                    <label for="proof_of_payment" class="block font-medium mb-2">Bukti Pembayaran</label>
-                    @if($order->bukti_pembayaran)
-                        <p class="border border-gray-300 rounded-lg p-2 w-full">Nama file: {{ basename($order->bukti_pembayaran) }}</p>
-                    @else
-                        <p>Belum Ada Bukti Pembayaran yang diUpload.</p>
-                    @endif
                 </div>
             </div>
             
@@ -80,7 +64,7 @@
                                     @if($detail->dokumen_tambahan)
                                         <p class="border border-gray-300 rounded-lg p-2 w-full">Nama file: {{ basename($detail->dokumen_tambahan) }}</p>
                                     @else
-                                        <p>Belum Ada Bukti Pembayaran yang diUpload.</p>
+                                        <p>Belum Ada Dokumen Tambahan yang diUpload.</p>
                                     @endif
                                 </div>
                             </div>

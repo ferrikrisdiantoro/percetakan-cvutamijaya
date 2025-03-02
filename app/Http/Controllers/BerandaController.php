@@ -7,9 +7,16 @@ use Illuminate\Http\Request;
 
 class BerandaController extends Controller
 {
+    public function index()
+    {
+        // Jika tidak ada record, kembalikan instance baru
+        $beranda = Beranda::first() ?? new Beranda();
+
+        return view('pelanggan.home', compact('beranda'));
+    }
     public function edit()
     {
-        $beranda = Beranda::first(); // Ambil data pertama (asumsikan hanya ada satu entri)
+        $beranda = Beranda::firstOrNew(); // Menggunakan firstOrNew() langsung
         return view('admin.edit-beranda', compact('beranda'));
     }
 
@@ -18,7 +25,9 @@ class BerandaController extends Controller
         $request->validate([
             'gambar_utama' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'gambar_carousel1' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'link1_g1' => 'required|string',
             'gambar_carousel2' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'link1_g2' => 'required|string',
             'sec2_text1' => 'required|string',
             'sec2_text2' => 'required|string',
             'sec2_text3' => 'required|string',
@@ -29,7 +38,9 @@ class BerandaController extends Controller
             'sec3_map' => 'required|string',
         ]);
 
-        $beranda = Beranda::first();
+        $beranda = Beranda::firstOrNew(); // Menggunakan firstOrNew() untuk mendapatkan atau membuat record baru
+
+        // Handle file uploads
         if ($request->hasFile('gambar_utama')) {
             $file = $request->file('gambar_utama');
             $path = $file->store('uploads', 'public');
@@ -41,15 +52,26 @@ class BerandaController extends Controller
             $path = $file->store('uploads', 'public');
             $beranda->gambar_carousel1 = 'storage/' . $path;
         }
-    
+        $beranda->link1_g1 = $request->link1_g1;
+        
         if ($request->hasFile('gambar_carousel2')) {
             $file = $request->file('gambar_carousel2');
             $path = $file->store('uploads', 'public');
             $beranda->gambar_carousel2 = 'storage/' . $path;
         }
+        $beranda->link1_g2 = $request->link1_g2;
+
+        $beranda->sec2_text1 = $request->sec2_text1;
+        $beranda->sec2_text2 = $request->sec2_text2;
+        $beranda->sec2_text3 = $request->sec2_text3;
+        $beranda->sec3_judul = $request->sec3_judul;
+        $beranda->sec3_text1 = $request->sec3_text1;
+        $beranda->sec3_text2 = $request->sec3_text2;
+        $beranda->sec3_text3 = $request->sec3_text3;
+        $beranda->sec3_map = $request->sec3_map;
     
-        $beranda->update($request->except(['gambar_utama', 'gambar_carousel1', 'gambar_carousel2']));
         $beranda->save();
+        
         return redirect()->route('beranda-edit')->with('success', 'Beranda berhasil diperbarui!');
     }
 }

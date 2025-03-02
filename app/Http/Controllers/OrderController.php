@@ -14,7 +14,7 @@ class OrderController extends Controller
     {
         try {
             $validated = $request->validate([
-                'product_id' => 'required|exists:products,id_produk',
+                'product_id' => 'required|exists:products,id',
                 'kuantitas' => 'required|integer|min:1',
                 'total_pembayaran' => 'required|numeric|min:1',
             ]);
@@ -42,7 +42,7 @@ class OrderController extends Controller
     
             DB::commit();
     
-            return response()->json(['order_id' => $order->id_pesanan], 201);
+            return response()->json(['order_id' => $order->id], 201);
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::error('Error saat membuat pesanan:', ['error' => $e->getMessage()]);
@@ -56,7 +56,7 @@ class OrderController extends Controller
     public function addToCart(Request $request)
     {
         $validated = $request->validate([
-            'product_id' => 'required|exists:products,id_produk',
+            'product_id' => 'required|exists:products,id',
             'kuantitas' => 'required|integer|min:1',
             'total_pembayaran' => 'required|numeric',
         ]);
@@ -75,10 +75,10 @@ class OrderController extends Controller
         }
     }
 
-    public function destroy(Request $request, $id_pesanan)
+    public function destroy(Request $request, $id)
     {
         try {
-            $order = Order::findOrFail($id_pesanan);
+            $order = Order::findOrFail($id);
 
             // Change id_pelanggan to id_user to match your database structure
             if ($order->id_user !== Auth::id()) {
@@ -122,11 +122,11 @@ class OrderController extends Controller
             // Validasi input, pastikan order_ids ada dan berupa array
             $validated = $request->validate([
                 'order_ids' => 'required|array',
-                'order_ids.*' => 'exists:orders,id_pesanan'
+                'order_ids.*' => 'exists:orders,id'
             ]);
     
             // Ambil semua pesanan yang dimiliki oleh user dan sesuai dengan order_ids
-            $orders = Order::whereIn('id_pesanan', $validated['order_ids'])
+            $orders = Order::whereIn('id', $validated['order_ids'])
                 ->where('id_user', Auth::id()) // Filter hanya pesanan milik user yang sedang login
                 ->get();
     
@@ -136,7 +136,7 @@ class OrderController extends Controller
     
             // Hapus pesanan dan kembalikan stok produk
             foreach ($orders as $order) {
-                $product = Product::findOrFail($order->id_produk);
+                $product = Product::findOrFail($order->id);
                 $product->stok += $order->kuantitas;
                 $product->save();
                 $order->delete();

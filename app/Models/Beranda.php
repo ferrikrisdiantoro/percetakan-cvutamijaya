@@ -10,12 +10,14 @@ class Beranda extends Model
     use HasFactory;
 
     protected $table = 'tabel_beranda';
-    protected $primaryKey = 'id_beranda';
+    protected $primaryKey = 'id';
 
     protected $fillable = [
         'gambar_utama',
         'gambar_carousel1',
+        'link1_g1',
         'gambar_carousel2',
+        'link1_g2',
         'sec2_text1',
         'sec2_text2',
         'sec2_text3',

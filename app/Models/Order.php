@@ -9,35 +9,46 @@ use Illuminate\Support\Str;
 class Order extends Model
 {
     use HasFactory;
-
-    protected $primaryKey = 'id_pesanan'; // Set primary key ke 'id_pesanan'
+    protected $table = 'orders';
+    protected $primaryKey = 'id'; // Set primary key ke 'id_pesanan'
     public $incrementing = false; // Karena id_pesanan kemungkinan adalah string
     protected $keyType = 'string'; // Pastikan key type adalah string
 
     protected $fillable = [
-        'id_pesanan',
         'id_produk',
-        'id_pelanggan',
+        'id_user',
         'kuantitas',
         'total_pembayaran',
     ];
 
     // Relasi ke model Product
     // Relasi ke model Product
+    // Order Model
     public function product()
     {
-        return $this->belongsTo(Product::class, 'id_produk'); // Menambahkan relasi ke Product
+        return $this->belongsTo(Product::class, 'id_produk', 'id');
+    }
+
+    // Product Model
+    public function orders()
+    {
+        return $this->hasMany(Order::class, 'id_produk', 'id');
+    }
+
+    public function transactions()
+    {
+        return $this->hasMany(Transaction::class, 'id_pesanan', 'id'); // Sesuaikan foreign key
     }
 
     // Relasi ke model User
     public function user()
     {
-        return $this->belongsTo(User::class, 'id_pelanggan');
+        return $this->belongsTo(User::class, 'id_user', 'id');
     }
 
     public function transactionDetails()
     {
-        return $this->hasMany(DetailTransaction::class, 'id_pesanan', 'id_pesanan');
+        return $this->hasMany(DetailTransaction::class, 'id_pesanan', 'id');
     }
 
 
@@ -47,9 +58,9 @@ class Order extends Model
         parent::boot();
 
         static::creating(function ($order) {
-            $lastOrder = self::lockForUpdate()->orderBy('id_pesanan', 'desc')->first();
-            $lastNumber = $lastOrder ? (int) Str::after($lastOrder->id_pesanan, 'PSN') : 0;
-            $order->id_pesanan = 'PSN' . str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
+            $lastOrder = self::lockForUpdate()->orderBy('id', 'desc')->first();
+            $lastNumber = $lastOrder ? (int) Str::after($lastOrder->id, 'PSN') : 0;
+            $order->id = 'PSN' . str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
         });
     }
 

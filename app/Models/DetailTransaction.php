@@ -13,7 +13,7 @@ class DetailTransaction extends Model
     protected $table = 'transaction_orders';
 
     // Tentukan primary key tabel
-    protected $primaryKey = 'id_detailtransaksi';
+    protected $primaryKey = 'id';
 
     public $incrementing = false; // Karena id_pesanan kemungkinan adalah string
     protected $keyType = 'string'; // Pastikan key type adalah string
@@ -29,14 +29,14 @@ class DetailTransaction extends Model
     // Relasi ke model Transaction
     public function transaction()
     {
-        return $this->belongsTo(Transaction::class, 'id_transaksi', 'id_transaksi');
+        return $this->belongsTo(Transaction::class, 'id_transaksi', 'id');
     }
 
 // Model DetailTransaction.php
     public function product()
     {
-        return $this->belongsTo(Order::class, 'id_pesanan', 'id_pesanan')
-                    ->belongsTo(Product::class, 'id_produk', 'id_produk');
+        return $this->belongsTo(Order::class, 'id_pesanan', 'id')
+                    ->belongsTo(Product::class, 'id_produk', 'id');
     }
 
     
@@ -44,7 +44,7 @@ class DetailTransaction extends Model
     // Relasi ke model Order
     public function order()
     {
-        return $this->belongsTo(Order::class, 'id_pesanan', 'id_pesanan');
+        return $this->belongsTo(Order::class, 'id_pesanan', 'id');
     }
 
     protected static function boot()
@@ -52,9 +52,9 @@ class DetailTransaction extends Model
         parent::boot();
 
         static::creating(function ($transactiondetail) {
-            $lastOrder = self::orderBy('id_detailtransaksi', 'desc')->first();
-            $lastNumber = $lastOrder ? (int)Str::after($lastOrder->id_detailtransaksi, 'TRD') : 0;
-            $transactiondetail->id_detailtransaksi = 'TRD' . str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT); // Assign id_transaksi
+            $lastOrder = self::orderBy('id', 'desc')->first();
+            $lastNumber = $lastOrder ? (int)Str::after($lastOrder->id, 'TRD') : 0;
+            $transactiondetail->id = 'TRD' . str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT); // Assign id_transaksi
         });
     }
 }

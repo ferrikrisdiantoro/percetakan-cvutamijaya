@@ -19,7 +19,7 @@ class CartController extends Controller
     {
         // Validasi data yang dikirim dari frontend
         $validated = $request->validate([
-            'id_produk' => 'required|string|exists:products,id_produk',
+            'id_produk' => 'required|string|exists:products,id',
             'kuantitas' => 'required|integer|min:1',
             'subtotal' => 'required|numeric|min:0',
         ]);
@@ -74,7 +74,7 @@ class CartController extends Controller
         }
 
         $cartItems = Cart::with(['product' => function($query) {
-            $query->select('id_produk', 'nama_produk', 'harga', 'gambar');
+            $query->select('id', 'nama_produk', 'harga', 'gambar');
         }])->where('id_user', $userId)->get();
 
         // Transform the data with correct image paths
@@ -97,7 +97,7 @@ class CartController extends Controller
             }
 
             return [
-                'id_cart' => $item->id_cart,
+                'id' => $item->id,
                 'id_user' => $item->id_user,
                 'id_produk' => $item->id_produk,
                 'kuantitas' => $item->kuantitas,

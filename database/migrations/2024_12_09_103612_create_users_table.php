@@ -9,9 +9,9 @@ class CreateUsersTable extends Migration
     public function up()
     {
         Schema::create('users', function (Blueprint $table) {
-            $table->string('id_user')->primary(); // Primary key custom
-            $table->string('nama_lengkap'); // Kolom untuk nama lengkap
-            $table->string('username');         // Kolom nama
+            $table->string('id')->primary(); // Primary key custom
+            $table->string('name'); // Kolom untuk nama lengkap
+            $table->string('username');// Kolom nama
             $table->string('email')->unique(); // Email harus unik
             $table->string('password'); // Password
             $table->string('telepon'); // Nomor telepon

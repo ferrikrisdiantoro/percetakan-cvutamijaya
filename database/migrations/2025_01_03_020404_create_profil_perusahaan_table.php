@@ -9,7 +9,7 @@ class CreateProfilPerusahaanTable extends Migration
     public function up()
     {
         Schema::create('profil_perusahaan', function (Blueprint $table) {
-            $table->id('id_profil_perusahaan');
+            $table->id('id');
             $table->string('logo')->nullable(); // Menyimpan logo perusahaan
             $table->string('judul_p1')->nullable(); // Judul untuk section pertama
             $table->text('isi_p1')->nullable(); // Isi untuk section pertama

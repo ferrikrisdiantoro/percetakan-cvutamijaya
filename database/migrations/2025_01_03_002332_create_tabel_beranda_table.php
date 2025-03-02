@@ -9,10 +9,12 @@ class CreateTabelBerandaTable extends Migration
     public function up()
     {
         Schema::create('tabel_beranda', function (Blueprint $table) {
-            $table->id('id_beranda');
+            $table->id('id');
             $table->string('gambar_utama');
             $table->string('gambar_carousel1');
+            $table->string('link1_g1');
             $table->string('gambar_carousel2');
+            $table->string('link1_g2');
             $table->text('sec2_text1');
             $table->text('sec2_text2');
             $table->text('sec2_text3');

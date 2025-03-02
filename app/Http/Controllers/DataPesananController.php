@@ -11,12 +11,13 @@ class DataPesananController extends Controller
     // Menampilkan semua data pesanan
     public function index()
     {
-        $orders = Transaction::with('detailTransactions.order.product')
-        ->where('id_pelanggan', Auth::id())
-        ->get();
+        $transactions = Transaction::with('detailTransactions.order.product')
+            ->where('id_user', Auth::id())
+            ->get();
 
-        return view('pelanggan.data-pesanan', compact('orders'));
+        return view('pelanggan.data-pesanan', compact('transactions'));
     }
+
 }
 
 

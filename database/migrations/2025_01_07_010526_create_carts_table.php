@@ -14,7 +14,7 @@ class CreateCartsTable extends Migration
     public function up()
     {
         Schema::create('carts', function (Blueprint $table) {
-            $table->id('id_cart'); // Primary key
+            $table->id('id'); // Primary key
             $table->string('id_user'); // Foreign key ke tabel users
             $table->string('id_produk'); // Foreign key ke tabel products
             $table->integer('kuantitas')->default(1); // Jumlah produk dalam keranjang
@@ -22,8 +22,8 @@ class CreateCartsTable extends Migration
             $table->timestamps(); // Kolom created_at dan updated_at
 
             // Relasi
-            $table->foreign('id_user')->references('id_user')->on('users')->onDelete('cascade');
-            $table->foreign('id_produk')->references('id_produk')->on('products')->onDelete('cascade');
+            $table->foreign('id_user')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('id_produk')->references('id')->on('products')->onDelete('cascade');
         });
     }
 

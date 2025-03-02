@@ -29,11 +29,21 @@
         </div>
 
         <div class="mt-2 form-group">
+            <label for="link1_g1" class="block text-sm text-white font-bold">Link Produk 1</label>
+            <input type="text" name="link1_g1" id="link1_g1" class="mt-1 block w-full border-gray-300 text-gray-900 rounded-md shadow-sm form-control" value="{{ $beranda->link1_g1 }}">
+        </div>
+
+        <div class="mt-2 form-group">
             <label for="gambar_carousel2" class="block text-sm text-white font-bold">Gambar Carousel 2</label>
             <input type="file" name="gambar_carousel2" id="gambar_carousel2" class="mt-1 block w-full border-gray-900 text-white rounded-md shadow-sm form-control form-control">
             @if($beranda->gambar_carousel2)
                 <img src="{{ asset($beranda->gambar_carousel2) }}" alt="Carousel 2" class="img-thumbnail mt-2" width="200">
             @endif
+        </div>
+
+        <div class="mt-2 form-group">
+            <label for="link1_g2" class="block text-sm text-white font-bold">Link Produk 2</label>
+            <input type="text" name="link1_g2" id="link1_g2" class="mt-1 block w-full border-gray-300 text-gray-900 rounded-md shadow-sm form-control" value="{{ $beranda->link1_g2 }}">
         </div>
 
         <div class="mt-2 form-group">

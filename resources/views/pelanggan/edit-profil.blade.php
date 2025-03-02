@@ -7,8 +7,8 @@
     <form action="{{ route('update.profile') }}" method="POST" enctype="multipart/form-data" class="rounded shadow-md">
         @csrf
         <div class="mb-4">
-            <label for="nama_lengkap" class="block text-sm text-white font-bold">Nama Lengkap:</label>
-            <input type="text" id="nama_lengkap" name="nama_lengkap" value="{{ Auth::user()->nama_lengkap }}" 
+            <label for="name" class="block text-sm text-white font-bold">Nama Lengkap:</label>
+            <input type="text" id="name" name="name" value="{{ Auth::user()->name }}" 
                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" required>
         </div>
 

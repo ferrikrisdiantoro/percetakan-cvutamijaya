@@ -23,14 +23,14 @@ class ProfilController extends Controller
     public function update(Request $request)
     {
         $request->validate([
-            'nama_lengkap' => 'required|string|max:255',
-            'username' => 'required|string|max:255|unique:users,username,' . Auth::id() . ',id_user',
+            'name' => 'required|string|max:255',
+            'username' => 'required|string|max:255|unique:users,username,' . Auth::id() . ',id',
             'telepon' => 'nullable|string|max:20',
             'alamat' => 'nullable|string|max:255',
         ]);
 
         $user = Auth::user();
-        $user->nama_lengkap = $request->nama_lengkap;
+        $user->name = $request->name;
         $user->username = $request->username;
         $user->telepon = $request->telepon;
         $user->alamat = $request->alamat;

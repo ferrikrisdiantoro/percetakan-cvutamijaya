@@ -15,6 +15,7 @@ use App\Http\Controllers\ProfilController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\DataPemesananAdminController;
 use App\Http\Controllers\HomeAdminController;
+use App\Http\Controllers\PaymentController;
 
 // Route utama
 Route::get('/', function () {
@@ -31,21 +32,18 @@ Route::post('logout', [LoginController::class, 'logout'])->name('logout');
 
 // Route untuk Produk
 Route::get('/product', [ProductController::class, 'index'])->name('product.index');
-
-Route::post('/transaksi/store', [TransactionController::class, 'store'])->name('transaksi.store');
-
 // Route untuk Produk
 Route::get('/profil-perusahaan', [CompanyProfileController::class, 'index'])->name('profil-perusahaan');
 
 
 Route::middleware(['auth'])->group(function () {
-    // Menggunakan route dengan parameter id_produk
-    Route::get('/product/buy/{id_produk}', [ProductController::class, 'buy'])->name('product.buy');
+    // Menggunakan route dengan parameter id
+    Route::get('/product/buy/{id}', [ProductController::class, 'buy'])->name('product.buy');
     Route::post('/transaction/store', [TransactionController::class, 'store'])->name('transaction.store');
     Route::post('/order/store', [OrderController::class, 'store'])->name('order.store');
     Route::post('/transaction/cart', [TransactionController::class, 'cart'])->name('transaction.cart');
     Route::post('/add-to-cart', [OrderController::class, 'addToCart']);
-    Route::delete('/order/destroy/{id_pesanan}', [OrderController::class, 'destroy'])->name('order.destroy');
+    Route::delete('/order/destroy/{id}', [OrderController::class, 'destroy'])->name('order.destroy');
     Route::delete('/order/multipledestroy', [OrderController::class, 'multipledestroy'])->name('order.multipledestroy');
     Route::get('/data-pesanan', [TransactionController::class, 'index'])->name('data-pesanan');
     Route::get('/profil', [ProfilController::class, 'index'])->name('profile'); // Halaman profil
@@ -58,6 +56,9 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/cart/{cartId}', [CartController::class, 'destroy']);
     Route::post('/cart/checkout', [CartController::class, 'checkout']);
     Route::put('/cart/update/{cartId}', [CartController::class, 'update']);
+    Route::get('/product/search', [ProductController::class, 'search'])->name('product.search');
+    Route::post('/transaction/create', [PaymentController::class, 'createTransaction']);
+    Route::get('/transaction/success', [PaymentController::class, 'success'])->name('transaction.success');
 });
 
 Route::post('/create-transaction', [OrderController::class, 'createTransaction'])->name('create.transaction');
@@ -82,10 +83,10 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
     //CRUD PRODUK
     Route::get('/product/create', [ProductController::class, 'create'])->name('product.create');
-    Route::get('/product/edit/{id_produk}', [ProductController::class, 'edit'])->name('product.edit');
+    Route::get('/product/edit/{id}', [ProductController::class, 'edit'])->name('product.edit');
     Route::post('/product/store', [ProductController::class, 'store'])->name('product.store');
-    Route::put('/product/update/{id_produk}', [ProductController::class, 'update'])->name('product.update');
-    Route::delete('/product/destroy/{id_produk}', [ProductController::class, 'destroy'])->name('product.destroy');
+    Route::put('/product/update/{id}', [ProductController::class, 'update'])->name('product.update');
+    Route::delete('/product/destroy/{id}', [ProductController::class, 'destroy'])->name('product.destroy');
 });
 
 

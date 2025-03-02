@@ -30,8 +30,8 @@
                 <select id="status" name="status" class="border border-gray-400 p-2 w-full">
                     <option value="">-- Pilih Status --</option>
                     <option value="pending">Pending</option>
-                    <option value="proses">Proses</option>
-                    <option value="selesai">Selesai</option>
+                    <option value="process">Proses</option>
+                    <option value="completed">Selesai</option>
                 </select>
             </div>
             <div class="col-span-2">
@@ -55,7 +55,6 @@
                 <th class="border border-gray-600 p-2">Jumlah Barang</th>
                 <th class="border border-gray-600 p-2">Tanggal Transaksi</th>
                 <th class="border border-gray-600 p-2">Total Bayar</th>
-                <th class="border border-gray-600 p-2">Tipe Pembayaran</th>
                 <th class="border border-gray-600 p-2">Status Pembayaran</th>
                 <th class="border border-gray-600 p-2">Status Pesanan</th>
             </tr>
@@ -68,7 +67,7 @@
         @else
             @foreach ($transactions as $transaction)
                 <tr class="bg-gray-800 text-white">
-                    <td class="border border-gray-600 p-2">{{ $transaction->id_transaksi }}</td>
+                    <td class="border border-gray-600 p-2">{{ $transaction->id }}</td>
                     <td class="border border-gray-600 p-2 text-center">
                         @foreach($transaction->detailTransactions as $detail)
                             <p>{{ $detail->order->id_produk }} </p>
@@ -77,7 +76,7 @@
                     <td class="border border-gray-600 p-2">{{ $transaction->id_user }}</td>
                     <td class="border border-gray-600 p-2">
                         @foreach($transaction->detailTransactions as $detail)
-                            <p>{{ $detail->order->id_pesanan }} </p>
+                            <p>{{ $detail->order->id }} </p>
                         @endforeach
                     </td>
                     <td class="border border-gray-600 p-2 text-center">
@@ -87,7 +86,6 @@
                     </td>
                     <td class="border border-gray-600 p-2">{{ \Carbon\Carbon::parse($transaction->tanggal_transaksi)->format('d/m/Y') }}</td>
                     <td class="border border-gray-600 p-2">{{ $transaction->total_pembayaran }}</td>
-                    <td class="border border-gray-600 p-2">{{ $transaction->mode_pembayaran }}</td>
                     <td class="border border-gray-600 p-2">LUNAS</td>
                     <td class="border border-gray-600 p-2">{{ $transaction->status }}</td>
                 </tr>

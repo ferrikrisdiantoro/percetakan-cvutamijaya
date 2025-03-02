@@ -93,24 +93,22 @@
                     <th class="px-4 py-2 border text-left">Jumlah Barang</th>
                     <th class="px-4 py-2 border text-left">Tanggal Transaksi</th>
                     <th class="px-4 py-2 border text-left">Total Bayar</th>
-                    <th class="px-4 py-2 border text-left">Tipe Pembayaran</th>
-                    <th class="px-4 py-2 border text-left">Status Pembayaran</th>
                     <th class="px-4 py-2 border text-left">Status Pesanan</th>
                 </tr>
             </thead>
             <tbody class="text-gray-700">
                 @foreach ($transactions as $transaction)
                     <tr>
-                        <td class="px-4 py-2 border">{{ $transaction->id_transaksi }}</td>
+                        <td class="px-4 py-2 border">{{ $transaction->id }}</td>
                         <td class="px-4 py-2 border">
                             @foreach($transaction->detailTransactions as $detail)
                                 <p>{{ $detail->order->id_produk }} </p>
                             @endforeach
                         </td>
-                        <td class="px-4 py-2 border">{{ $transaction->id_pelanggan }}</td>
+                        <td class="px-4 py-2 border">{{ $transaction->id_user }}</td>
                         <td class="px-4 py-2 border">
                             @foreach($transaction->detailTransactions as $detail)
-                                <p>{{ $detail->order->id_pesanan }} </p>
+                                <p>{{ $detail->order->id }} </p>
                             @endforeach
                         </td>
                         <td class="px-4 py-2 border">
@@ -120,8 +118,6 @@
                         </td>
                         <td class="px-4 py-2 border">{{ \Carbon\Carbon::parse($transaction->tanggal_transaksi)->format('d/m/Y') }}</td>
                         <td class="px-4 py-2 border">{{ $transaction->total_pembayaran }}</td>
-                        <td class="px-4 py-2 border">{{ $transaction->mode_pembayaran }}</td>
-                        <td class="px-4 py-2 border">LUNAS</td>
                         <td class="px-4 py-2 border">{{ $transaction->status }}</td>
                     </tr>
                 @endforeach

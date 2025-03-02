@@ -67,17 +67,17 @@
                 @forelse ($users as $user)
                     <tr class="odd:bg-teal-200 text-black even:bg-teal-100 border-b dark:border-gray-700">
                         <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
-                            {{ $user->id_user }}
+                            {{ $user->id }}
                         </td>
-                        <td class="px-6 py-4">{{ $user->nama_lengkap }}</td>
+                        <td class="px-6 py-4">{{ $user->name }}</td>
                         <td class="px-6 py-4">{{ $user->username }}</td>
                         <td class="px-6 py-4">{{ $user->email }}</td>
                         <td class="px-6 py-4">{{ $user->telepon }}</td>
                         <td class="px-6 py-4">{{ $user->alamat }}</td>
                         <td class="px-6 py-4">{{ ucfirst($user->role) }}</td>
                         <td class="px-6 py-4">
-                            <a href="{{ route('user-edit', $user->id_user) }}" class="focus:outline-none text-white bg-yellow-700 hover:bg-yellow-800 focus:ring-4 focus:ring-yellow-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-yellow-600 dark:hover:bg-yellow-700 dark:focus:ring-yellow-900">Edit</a>
-                            <form action="{{ route('user-destroy', $user->id_user) }}" method="POST" style="display:inline;">
+                            <a href="{{ route('user-edit', $user->id) }}" class="focus:outline-none text-white bg-yellow-700 hover:bg-yellow-800 focus:ring-4 focus:ring-yellow-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-yellow-600 dark:hover:bg-yellow-700 dark:focus:ring-yellow-900">Edit</a>
+                            <form action="{{ route('user-destroy', $user->id) }}" method="POST" style="display:inline;">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="focus:outline-none text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900" onclick="return confirm('Hapus user ini?')">Hapus</button>

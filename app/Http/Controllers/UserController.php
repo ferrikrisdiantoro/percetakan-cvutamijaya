@@ -10,27 +10,27 @@ class UserController extends Controller
     public function index(Request $request)
     {
         $query = User::query();
-        $perPage = $request->input('entries', 10); // Default 10 entries per page
-        
-        // Role filter
+        $perPage = $request->input('entries', 10);
+
+        // Search functionality first
+        if ($request->has('search')) {
+            $searchTerm = $request->search;
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('id_user', 'LIKE', "%{$searchTerm}%")
+                ->orWhere('name', 'LIKE', "%{$searchTerm}%")
+                ->orWhere('username', 'LIKE', "%{$searchTerm}%")
+                ->orWhere('email', 'LIKE', "%{$searchTerm}%")
+                ->orWhere('telepon', 'LIKE', "%{$searchTerm}%")
+                ->orWhere('alamat', 'LIKE', "%{$searchTerm}%")
+                ->orWhere('role', 'LIKE', "%{$searchTerm}%");
+            });
+        }
+
+        // Role filter after search
         if ($request->has('role_filter') && $request->role_filter != 'all') {
             $query->where('role', $request->role_filter);
         }
 
-        // Search functionality
-        if ($request->has('search')) {
-            $searchTerm = $request->search;
-            $query->where(function($q) use ($searchTerm) {
-                $q->where('nama_lengkap', 'LIKE', "%{$searchTerm}%")
-                  ->orWhere('username', 'LIKE', "%{$searchTerm}%")
-                  ->orWhere('email', 'LIKE', "%{$searchTerm}%")
-                  ->orWhere('telepon', 'LIKE', "%{$searchTerm}%")
-                  ->orWhere('alamat', 'LIKE', "%{$searchTerm}%")
-                  ->orWhere('role', 'LIKE', "%{$searchTerm}%");
-            });
-        }
-
-        // Get paginated results
         $users = $query->paginate($perPage)->withQueryString();
 
         return view('admin.user', compact('users'));
@@ -49,7 +49,7 @@ class UserController extends Controller
     {
         // Validasi data
         $request->validate([
-            'nama_lengkap' => 'required|string|max:255',
+            'name' => 'required|string|max:255',
             'username' => 'required|string|max:255',
             'email' => 'required|email|max:255',
             'telepon' => 'required|string|max:15',
