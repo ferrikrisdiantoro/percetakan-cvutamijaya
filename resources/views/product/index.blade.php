@@ -316,6 +316,31 @@
         </div>
 
         <script>
+            let productsData = @json($products);
+            document.addEventListener("DOMContentLoaded", function() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const highlightProductId = urlParams.get('highlight'); // misalnya "PRD0001"
+
+                if (highlightProductId) {
+                    // Cari data product yang ID-nya sama dengan highlightProductId
+                    let product = productsData.find(p => p.id === highlightProductId);
+
+                    if (product) {
+                        // Panggil showOrderModal() dengan data product
+                        showOrderModal(
+                            product.id,
+                            product.nama_produk,
+                            product.harga,
+                            product.gambar,
+                            product.stok,
+                            '#' // buyUrl kalau ada
+                        );
+                    } else {
+                        console.log("Produk dengan ID " + highlightProductId + " tidak ditemukan di productsData");
+                    }
+                }
+            })
+            
             function openImageModal(imageUrl) {
                 const modal = document.getElementById('imageModal');
                 const modalImage = document.getElementById('modalImage');
