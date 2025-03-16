@@ -44,7 +44,7 @@
                 src="{{ asset(optional($beranda)->gambar_carousel2 ?: 'images/default.jpg') }}" 
                 class="absolute block w-full -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2 cursor-pointer" 
                 alt="Carousel 2"
-                onclick="redirectToProductPage({{ optional($beranda)->link1_g2 }})"
+                onclick="redirectToProductPage('{{ optional($beranda)->link1_g2 }}')"
             >
         </div>
         <!-- Slider indicators -->

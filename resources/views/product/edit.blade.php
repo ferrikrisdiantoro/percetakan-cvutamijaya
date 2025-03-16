@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="bg-teal-600 p-8 mt-4 rounded-lg shadow-lg w-full text-dark">
+<div class="bg-teal-600 p-8 mt-4 rounded-lg shadow-lg w-[80%] mx-auto text-dark">
     <h1 class="text-2xl font-bold mb-6">Edit Product</h1>
     <form action="{{ route('product.update', $product->id) }}" method="POST" enctype="multipart/form-data" class="space-y-6">
     @csrf
