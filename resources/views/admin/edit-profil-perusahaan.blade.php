@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="bg-teal-600 p-8 mt-4 rounded-lg shadow-lg w-full">
+<div class="bg-teal-600 p-8 mt-4 rounded-lg shadow-lg w-[80%] mx-auto">
     <h1 class="text-2xl font-bold mb-6 text-white">Edit Profil Perusahaan</h1>
 
     @if(session('success'))

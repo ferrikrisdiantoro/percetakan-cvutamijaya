@@ -30,7 +30,7 @@ class LoginController extends Controller
             return redirect()->route('pelanggan.home');  // Pastikan route customer.index sudah ada
         }
 
-        return back()->withErrors(['login' => 'Invalid credentials'])->withInput();
+        return back()->with('error', 'Username atau kata sandi salah.');
     }
 
     // Logout pengguna
